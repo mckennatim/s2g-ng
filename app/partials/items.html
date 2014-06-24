@@ -1,0 +1,35 @@
+<div>
+{{dog}}
+  <div ng-controller="TimeCtrl">
+    <h1>stuff2get</h1>
+    <p>
+    <button ng-click="addUser()" >add user</button>
+    <form ng-submit="tubmit()" >
+       <input type="submit" id="time-stamp" value="timeStamp"/>
+    </form>
+    <p>{{timestamp}} </p>
+  </div>
+
+  <div ng-controller="InpCtrl">
+  <span>{{cnt}} needed</span> 
+    <ul class="list unstyled" >
+      <li ng-repeat="item in list | filter:{done:false} track by $id($index)">
+        <input type="checkbox" ng-model="item.done">
+        <span class="done-{{item.done}}">{{item.product}}</span>
+        <button ng-click="remove(item)">X</button>  
+      </li>
+    </ul> 
+    <form ng-submit="rubmit()">
+      <input ng-model="query" placeholder='search old lists'>  
+      <input type="submit" id="submit2" value="Append" /> 
+    </form>
+    gotten previously
+    <ul class="gotten unstyled" >
+      <li ng-repeat="got in list | filter:{done:true} | filter:query track by $id($index)">
+        <input type="checkbox" ng-click="clearTbox()" ng-model="got.done">
+        <span class="done-{{got.done}}">{{got.product}}</span>
+        <button ng-click="remove(got)">X</button>  
+      </li>
+    </ul>  
+  </div>
+</div> 

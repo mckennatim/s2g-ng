@@ -1,0 +1,23 @@
+{
+  "lastLive": 0,
+  "userList": [
+    "tim",
+    "tim2"
+  ],
+  "tim": {
+    "name": "tim",
+    "email": "mckenna.tim@gmail.com",
+    "lists": [],
+    "role": "admin",
+    "timestamp": 1399208688,
+    "apikey": "Natacitipavuwunexelisaci"
+  },
+  "tim2": {
+    "name": "tim2",
+    "email": "mckt_jp@yahoo.com",
+    "lists": [],
+    "role": "user",
+    "timestamp": 1399208688,
+    "apikiey": "Sobeqosevewacokejufozeki"
+  }
+}

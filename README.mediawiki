@@ -1,0 +1,13 @@
+==stuff2get==
+====todo====
+create app routes and controllers
+
+===express/node/mongo as api that works across domains and authenticates with apikey===
+
+curl -v -d "apikey=1234567" http://10.0.1.24:3000/api/authenticate -c cookies.txt
+
+curl -c cookies.txt -b cookies.txt -G http://10.0.1.24:3000/api/account
+
+node_modules/vows/bin/vows  test/strategy-spec.js  --spec
+
+===ngClient===
