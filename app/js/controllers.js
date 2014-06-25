@@ -54,7 +54,7 @@ stuffAppControllers.controller('InpCtrl', function ($scope, ItemsData, $filter) 
   };
 });
 
-stuffAppControllers.controller('RegisterCtrl', function ($scope, $http, AuthService, UserLS) {
+stuffAppControllers.controller('RegisterCtrl', function ($scope, $http, AuthService, UserLS, TokenInterceptor) {
   console.log(UserLS.users.lastLive)
   $scope.dog = 'butler';
   $scope.nameValid =/^\s*\w*\s*$/
@@ -98,10 +98,11 @@ stuffAppControllers.controller('RegisterCtrl', function ($scope, $http, AuthServ
       console.log('ok going to authenticate');
       AuthService.auth($scope.apikey).then(function(data){
         console.log(data);
-        if (data.name==$scope.user.name){
-          $scope.user = data;
-          UserLS.postUser(data, 'Authenticated');   
-          $scope.state=UserLS.getRegState();       
+        if (data.token.length>40){
+          //$scope.user = data;
+          UserLS.postUser($scope.user, 'Authenticated');   
+          $scope.state=UserLS.getRegState(); 
+          TokenInterceptor.setToken($scope.user.name, data.token)
         }
       }, function(data){//if error
         console.log(data)
@@ -138,9 +139,10 @@ stuffAppControllers.controller('IsregCtrl', function ($scope, $state, UserLS, Au
     console.log('ok going to authenticate');
     AuthService.auth($scope.user.apikey).then(function(data){
       console.log(data);
-      if (data.name==$scope.user.name){
-        $scope.user = data;
-        UserLS.postUser(data, 'Authenticated');          
+      console.log(data.token);
+      if (data.token.length >40){
+        UserLS.postUser($scope.user, 'Authenticated');   
+        UserLS.getUser($scope.user.name);       
       }
     }, function(data){//if error
       console.log(data)
