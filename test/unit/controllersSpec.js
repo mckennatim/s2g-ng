@@ -1,31 +1,40 @@
-'use strict';
 
-/* jasmine specs for controllers go here */
-describe('stuffApp', function(){
-  describe('stuffApp stuffAppControllers', function(){
-    beforeEach(module('stuffAppControllers'));
-    describe('UserCtrl', function(){
-      it('should have a dog scope thats petey', inject(function($rootScope, $controller){
-        var scope = $rootScope.$new();
-        var ctrl = $controller("UserCtrl", {$scope: scope });
-        expect(scope.dog).toBe('petey');        
-      }));
+   // 'use strict';
+var s2g_users={"lastLive":0,"regState":"Authenticated","userList":["tim"],"tim":{"name":"tim","email":"mckenna.tim@gmail.com","lists":[],"role":"","timestamp":1,"apikey":"Natacitipavuwunexelisaci"}};
+    /* jasmine specs for controllers go here */
+    describe('stuffApp', function(){
+        describe('stuffApp stuffAppControllers', function(){
+            beforeEach(module('stuffAppControllers'));
+            describe('UserCtrl', function(){
+                it('should have a dog scope thats petey', inject(function($rootScope, $controller){
+                    var scope = $rootScope.$new();
+                    var ctrl = $controller("UserCtrl", {$scope: scope });
+                    expect(scope.dog).toBe('petey');        
+                }));
+            });
+            describe('IsregCtrl', function() {
+                var ctrl
+                , UserLS
+                , scope
+                , state
+                , AuthService;
+                //beforeEach(module('stuffApp'));    
+                beforeEach(inject(function($rootScope, $controller) {
+                    UserLS = {
+                        numUsers: function() {return 2;},
+                        getLastLive: function(){return 'tim';},
+                        getUser: function(){return s2g_users['tim'];}
+                    };     
+                    AuthService = {
+                        auth: function() {}
+                    };
+                    scope = $rootScope.$new();      
+                    ctrl = $controller('IsregCtrl', {$scope: scope , $state: state, UserLS: UserLS, AuthService: AuthService });
+                }));    
+                it('Should call UserLS numUsers and get 2', function() {
+                    expect(scope.numUsers).toBe(2);
+                });
+            });
+        });
     });
-    describe('IsregCtrl', function() {
-      var ctrl, UserLS, $scope, $state;
-      //beforeEach(module('stuffApp'));    
-      beforeEach(inject(function($rootScope, $controller) {
-        UserLS = {
-          numUsers: function(key) {}
-        };      
-        spyOn(UserLS, 'numUsers').andReturn("2");      
-        $scope = $rootScope.$new();      
-        ctrl = $controller('IsregCtrl', {$scope: $scope , $state: $state, UserLS: UserLS });
-      }));    
-      it('Should call UserLS numUsers and get 2', function() {
-        expect($scope.numUsers).toBe('2');
-      });
-    });
-  });
-});
 

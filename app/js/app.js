@@ -20,11 +20,26 @@ config(['$urlRouterProvider', '$stateProvider', function($urlRouterProvider, $st
     url: '/user', 
     templateUrl: 'partials/user.html', 
     controller: 'UserCtrl'});
-  $stateProvider.state('shops', {url: '/shops', templateUrl: 'partials/shops.html', controller: 'ShopsCtrl'});
-  $stateProvider.state('config', {url: '/config', templateUrl: 'partials/config.html', controller: 'ConfigCtrl'});
-  $stateProvider.state('x', {url: '/', templateUrl: 'partials/shownothing.html', controller: 'IsregCtrl'});
-  $stateProvider.state('register', {url: '/register', templateUrl: 'partials/register.html', controller: 'RegisterCtrl'});
-  $stateProvider.state('admin', {url: '/admin', templateUrl: 'partials/admin.html', controller: 'AdminCtrl'});
+  $stateProvider.state('shops', {
+    url: '/shops', 
+    templateUrl: 'partials/shops.html', 
+    controller: 'ShopsCtrl'});
+  $stateProvider.state('config', {
+    url: '/config', 
+    templateUrl: 'partials/config.html', 
+    controller: 'ConfigCtrl'});
+  $stateProvider.state('x', {
+    url: '/', 
+    templateUrl: 'partials/shownothing.html', 
+    controller: 'IsregCtrl'});
+  $stateProvider.state('register', {
+    url: '/register', 
+    templateUrl: 'partials/register.html', 
+    controller: 'RegisterCtrl'});
+  $stateProvider.state('admin', {
+    url: '/admin', 
+    templateUrl: 'partials/admin.html', 
+    controller: 'AdminCtrl'});
   $urlRouterProvider.otherwise('/');
 }],
   ['$httpProvider', function($httpProvider) {

@@ -126,30 +126,31 @@ stuffAppControllers.controller('RegisterCtrl', function ($scope, $http, AuthServ
 });
 
 stuffAppControllers.controller('IsregCtrl', function ($scope, $state, UserLS, AuthService) {
-  $scope.numUsers = UserLS.numUsers();
-  $scope.user = UserLS.getUserIdx(UserLS.users.lastLive)  || UserLS.blankUser;
-  console.log('in isRegCtrl # of users = ' + $scope.numUsers);
-  console.log($scope.user)
-  if ($scope.numUsers==0){
-    $state.go('register');
-  } else if ($scope.numUsers==1 & $scope.user.apikey.length<10){
-    UserLS.setRegState('Enter apikey');
-    $state.go('register');
-  } else if ($scope.numUsers==1){//and there is apikey
-    console.log('ok going to authenticate');
-    AuthService.auth($scope.user.apikey).then(function(data){
-      console.log(data);
-      console.log(data.token);
-      if (data.token.length >40){
-        UserLS.postUser($scope.user, 'Authenticated');   
-        UserLS.getUser($scope.user.name);       
-      }
-    }, function(data){//if error
-      console.log(data)
-      response = data;
-    });
-  }
-  console.log($scope.numUsers);
+    $scope.numUsers = UserLS.numUsers();
+    $scope.user =UserLS.getUser(UserLS.getLastLive()) || UserLS.blankUser;
+    console.log('in isRegCtrl # of users = ' + $scope.numUsers);
+    console.log($scope.user)
+    if ($scope.numUsers==0){
+        $state.go('register');
+    } else if ($scope.numUsers==1 & $scope.user.apikey.length<10){
+        UserLS.setRegState('Enter apikey');
+        $state.go('register');
+    } else if ($scope.numUsers==1){//and there is apikey
+        console.log('ok going to authenticate');
+        AuthService.auth($scope.user.apikey).then(function(data){
+            console.log(data);
+            console.log(data.token);
+            if (data.token.length >40){
+                UserLS.postUser($scope.user, 'Authenticated');   
+                UserLS.getUser($scope.user.name);       
+            }
+        }, function(data){//if error
+            console.log(data.message)
+            $scope.dog = data.message
+            var response = data;
+        });
+    }
+    console.log($scope.numUsers);
 });
 
 stuffAppControllers.controller('ListCtrl', function ($scope) {
