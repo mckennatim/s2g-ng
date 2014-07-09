@@ -5,7 +5,7 @@
 
 <form name='AdminForm'>
   <div class='form-group'>
-    <label>localStorage</label>{{isUser}}  
+    <label>localStorage -s2g_users</label>{{isUser}}  
     <input type="text" class="form-control" ng-model='username' name='nameInp'>
   </div>
   <div class="input-group-btn">
@@ -13,7 +13,19 @@
   <button id="btn_admin_del" class="btn btn-primary" ng-click="del()">del</button>
   <button id="btn_admin_listall" class="btn btn-primary" ng-click="listAll()">list all</button>
   </div>
-  <div class="output">{{username}}{{output}}</div>
+  <div class="output">{{username}}: {{output}}</div>
+</form> 
+<form name='AdminForm2'>
+  <div class='form-group'>
+    <label>localStorage -s2g_tokens</label>{{isUserT}}  
+    <input type="text" class="form-control" ng-model='usernameT' name='nameInpT'>
+  </div>
+  <div class="input-group-btn">
+  <button id= "btn_admin_findT" class="btn btn-primary" ng-click="findT()">find</button>
+  <button id="btn_admin_delT" class="btn btn-primary" ng-click="delT()">del</button>
+  <button id="btn_admin_listallT" class="btn btn-primary" ng-click="listAllT()">list all</button>
+  </div>
+  <div class="output">{{usernameT}}: {{outputT}}</div>
 </form> 
 </div>
 </div>

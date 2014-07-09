@@ -85,12 +85,15 @@ stuffAppServices.factory('UserLS', function() {
         currentUser: this.blankUser,
         getLastLive: function(){
             var users =   this.getAll();
-            console.log(users);
+            console.log( users);
             return users.userList[users.lastLive];
         },
         setLastLive: function(name){
             var ret = this.getAll();
+            console.log(ret.userList.indexOf(name))
             var idx = ret.userList.indexOf(name)
+            ret.lastLive=idx;
+            localStorage.setItem(this.key, JSON.stringify(ret));
             return idx;
         },
         getAll: function () {
@@ -156,8 +159,8 @@ stuffAppServices.factory('UserLS', function() {
 });
 stuffAppServices.factory('AuthService', function($http, $q) {
     return {
-        auth: function(apikey) {
-            var url=httpLoc + 'authenticate/';
+        auth: function(apikey, name) {
+            var url=httpLoc + 'authenticate/' + name;
             var deferred = $q.defer();
             $http.post(url, {apikey:apikey}, {withCredentials:true}).   
                 success(function(data, status) {
@@ -166,9 +169,15 @@ stuffAppServices.factory('AuthService', function($http, $q) {
                     deferred.resolve(data);
                 }).
                 error(function(data, status){
-                    //console.log(data || "Request failed");
-                    //console.log(status);
-                    deferred.reject({message: 'server is down'})
+                    console.log(data || "Request failed");
+                    console.log(status);
+                    if (status==0){
+                        deferred.reject({message: 'server is down'})
+                    } else if(status==401){
+                        deferred.reject({message: 'Authorization failed, try re-entering apikey'})
+                    }else{
+                        deferred.reject({message: 'no clue on what is wrong'})
+                    }
                 });
             return deferred.promise;
         },
@@ -183,7 +192,6 @@ stuffAppServices.factory('AuthService', function($http, $q) {
                 }).
                 error(function(data, status){
                     console.log(data || "Request failed");
-                    console.log(status);
                     deferred.reject({message: 'server is down'})
                 });
             return deferred.promise;
@@ -226,7 +234,7 @@ stuffAppServices.factory('ListService', function($http, $q) {
         } 
     }
 });
-stuffAppServices.factory('TokenInterceptor', function ($q, $window, $location, AuthService) {
+stuffAppServices.factory('TokenInterceptor', function ($q, $state, AuthService, UserLS) {
     var key = 's2g_tokens';
     var blankTokens= {userList:[]};
     return { 
@@ -254,11 +262,42 @@ stuffAppServices.factory('TokenInterceptor', function ($q, $window, $location, A
             al[name]=token 
             localStorage.setItem(this.key, JSON.stringify(al));
             return al
-        },   
+        },  
+        getToken: function(name){
+            var al =this.getAll();
+            return al[name];        	
+        },
+        getActiveToken: function(){
+            var name = UserLS.getLastLive();
+            return this.getToken(name);
+        },
+        tokenExists: function(){
+            var name = UserLS.getLastLive();
+            var al =this.getAll();
+            if (al.userList.indexOf(name) >   -1){
+                return true;
+            }         
+            return false; 
+        },
+        delUserToken: function(name){
+            var al = this.getAll();
+            var idx = al.userList.indexOf(name);
+            if (idx > -1){
+                al.userList.splice(idx, 1);
+            }
+            delete al[name]
+            console.log(al);
+            localStorage.setItem(this.key, JSON.stringify(al));
+        },
+        deleteActiveToken: function(){
+            var name = UserLS.getLastLive();
+            this.delUserToken(name);
+        },
         request: function (config) {
+            var tok = this.getActiveToken();
             config.headers = config.headers || {};
-            if ($window.sessionStorage.token) {
-                    config.headers.Authorization = 'Bearer ' + $window.sessionStorage.token;
+            if (tok) {
+                    config.headers.Authorization = 'Bearer ' + tok
             }
             return config;
         },
@@ -267,17 +306,16 @@ stuffAppServices.factory('TokenInterceptor', function ($q, $window, $location, A
         },
         /* Set Authentication.isAuthenticated to true if 200 received */
         response: function (response) {
-            if (response != null && response.status == 200 && $window.sessionStorage.token && !AuthenticationService.isAuthenticated) {
-                AuthenticationService.isAuthenticated = true;
-            }
+            // if (response != null && response.status == 200 && this.getActiveToken() && !AuthenticationService.isAuthenticated) {
+            //     AuthenticationService.isAuthenticated = true;
+            // }
             return response || $q.when(response);
         },
         /* Revoke client authentication if 401 is received */
         responseError: function(rejection) {
-            if (rejection != null && rejection.status === 401 && ($window.sessionStorage.token || AuthenticationService.isAuthenticated)) {
-                delete $window.sessionStorage.token;
-                AuthenticationService.isAuthenticated = false;
-                $location.path("/admin/login");
+            if (rejection != null && rejection.status === 401) {
+                this.deleteActiveToken();
+                $state.go('register');
             }
             return $q.reject(rejection);
         }

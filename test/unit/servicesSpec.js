@@ -1,6 +1,6 @@
 'use strict';
 /* jasmine specs for services go here */
-
+var s2g_users={"lastLive":0,"regState":"Authenticated","userList":["tim"],"tim":{"name":"tim","email":"mckenna.tim@gmail.com","lists":[],"role":"","timestamp":1,"apikey":"Natacitipavuwunexelisaci"}};
 describe('service', function() {
     beforeEach(module('stuffAppServices'));
     describe('ItemsData', function() {
@@ -73,8 +73,40 @@ describe('UserLS', function(){
         var uli = UserLS.numUsers();
         expect(uli).toBe(2)    
     }));
+    it('get(s)lastLive as  tim', inject(function(UserLS){
+        var uli = UserLS.getLastLive();
+        //console.log(uli)
+        expect(uli).toBe('tim')
+    }));    
+    it('set(s)lastLive as  tim2', inject(function(UserLS){
+        UserLS.setLastLive('tim2');
+        var uli = UserLS.getLastLive();
+        //console.log(uli)
+        expect(uli).toBe('tim2')
+    }));  
 });
-
+describe('TokenInterceptor', function(){
+    //var UserLS, scope, ctrl; 
+    var s2g_tokens = '{"userList":["tim2","tim"],"tim2":"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJuYW1lIjoidGltMiJ9.5cwoHp4JSLhsX3G4ZFhhYsb9U_MHWHnGfDYEV8yhvNk","tim":"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJuYW1lIjoidGltMiJ9.5cwoHp4JSLhsX3G4ZFhhYsb9U_MHWHnGfDYEV8yhvNk"}';
+    var store= {};
+    store = {storevars:['s2g_users','s2g_lists', 's2g_tokens'], s2g_tokens: s2g_tokens};
+    beforeEach(function() {
+        module('stuffAppServices');
+        // LocalStorage mock.
+        var key = 's2g_tokens';
+        spyOn(localStorage, 'getItem').andCallFake(function(key) {
+                return store[key];
+        });
+        Object.defineProperty(sessionStorage, "setItem", { writable: true });
+        spyOn(localStorage, 'setItem').andCallFake(function(key, value) {
+                store[key] = value;
+        });
+    });
+    it('gets token for user tim', inject(function(TokenInterceptor){
+        var tok = TokenInterceptor.getToken('tim');
+        expect(tok).toBe('dog');
+    }));
+}) ;  
 
 
 

@@ -1,6 +1,6 @@
 
-   // 'use strict';
-var s2g_users={"lastLive":0,"regState":"Authenticated","userList":["tim"],"tim":{"name":"tim","email":"mckenna.tim@gmail.com","lists":[],"role":"","timestamp":1,"apikey":"Natacitipavuwunexelisaci"}};
+ 'use strict';
+
     /* jasmine specs for controllers go here */
     describe('stuffApp', function(){
         describe('stuffApp stuffAppControllers', function(){
