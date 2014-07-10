@@ -116,7 +116,6 @@ stuffAppServices.factory('UserLS', function() {
             console.log(ret);
             return ret;
         },
-        users: users,
         setRegState: function(st){
             var ret = this.getAll();
             ret.regState = st;
@@ -129,6 +128,10 @@ stuffAppServices.factory('UserLS', function() {
         getUser: function (user) {   
             var ret = this.getAll()
             return ret[user];
+        },
+        getLastLiveUserRec: function(){
+            var name = this.getLastLive();
+            return this.getUser(name);
         },  
         getUserIdx: function(idx){
             var ret = this.getAll();
@@ -157,6 +160,9 @@ stuffAppServices.factory('UserLS', function() {
             var index = ulist.userList.indexOf(name);    
             if (index !== -1) {
                     ulist.userList.splice(index, 1);
+            }
+            if (this.getLastLive==name){
+                ulist.lastLive=0;
             }
             localStorage.setItem(this.key, JSON.stringify(ulist));
             return ulist;

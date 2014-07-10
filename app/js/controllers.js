@@ -55,10 +55,32 @@ stuffAppControllers.controller('InpCtrl', function ($scope, ItemsData, $filter) 
 });
 
 stuffAppControllers.controller('RegisterCtrl', ['$scope', '$http', 'AuthService', 'UserLS',  'TokenInterceptor', 'DbService', function ($scope, $http, AuthService, UserLS, TokenInterceptor, DbService) {
-    console.log(UserLS.users.lastLive)
+    var auth= function(apikey, name){
+        AuthService.auth(apikey, name).then(function(data){
+            //console.log(data)
+            if(Object.keys(data)[0]=='message'){
+                response = data.message
+                console.log(data)
+                $scope.userNameIs = data.message;
+                $scope.apikey = '';
+            } else if (data.token.length>40){  
+                $scope.state=UserLS.getRegState(); 
+                UserLS.setLastLive(name);
+                TokenInterceptor.setToken(name, data.token);
+                DbService.updateUser();
+                $scope.userNameIs = 'authenticated, token received';
+                $scope.apikey = '';                    
+            }
+        }, function(data){//if error
+            console.log(data)
+            $scope.userNameIs = data.message;
+            response = data;
+        });
+    };
+    console.log(UserLS.getLastLive())
     $scope.dog = 'butler';
     $scope.nameValid =/^\s*\w*\s*$/
-    $scope.user = UserLS.getUserIdx(UserLS.users.lastLive)  || UserLS.blankUser;
+    $scope.user = UserLS.getLastLiveUserRec()  || UserLS.blankUser;
     console.log($scope.user);
     $scope.state=UserLS.getRegState();
     console.log($scope.state);
@@ -74,30 +96,7 @@ stuffAppControllers.controller('RegisterCtrl', ['$scope', '$http', 'AuthService'
         $scope.user.email = $scope.email
         $scope.user.apikey = $scope.apikey
         //$scope.user = {username: $scope.username, email: $scope.email, apikey: $scope.apikey, lists:[]}
-        var auth= function(apikey, name){
-            AuthService.auth($scope.apikey, $scope.username).then(function(data){
-                //console.log(data)
-                if(Object.keys(data)[0]=='message'){
-                    response = data.message
-                    console.log(data)
-                    $scope.userNameIs = data.message;
-                    $scope.apikey = '';
-                } else if (data.token.length>40){
-                    //$scope.user = data;
-                    //UserLS.postUser($scope.user, 'Authenticated');   
-                    $scope.state=UserLS.getRegState(); 
-                    TokenInterceptor.setToken($scope.user.name, data.token);
-                    DbService.updateUser();
-                    $scope.userNameIs = 'authenticated, token received';
-                    $scope.apikey = '';                    
-                }
-            }, function(data){//if error
-                console.log(data)
-                $scope.userNameIs = data.message;
-                response = data;
-            });
-        };
-        console.log($scope.user)
+
         if ($scope.state=='Register'){
             console.log('new user to LS & db & get apikey sent')
             var response='';
@@ -121,7 +120,7 @@ stuffAppControllers.controller('RegisterCtrl', ['$scope', '$http', 'AuthService'
             console.log('ok going to authenticate');
             auth($scope.apikey, $scope.username);
             
-        } else if(UserLS.getRegState() == 'Get token'){
+        } else if($scope.state == 'Get token'){
             console.log('ok getting token');
             auth($scope.apikey, $scope.username);
         }
@@ -132,6 +131,18 @@ stuffAppControllers.controller('RegisterCtrl', ['$scope', '$http', 'AuthService'
         $scope.userNameIs = ' will check status...'
         AuthService.isUser($scope.username).then(function(data){
             console.log(data)
+            var userls = UserLS.getUser($scope.username);
+            if (userls){
+                console.log(userls)
+                $scope.email=userls.email;
+                $scope.apikey=userls.apikey;
+                if ($scope.apikey.length>10){
+                    $scope.state = 'Get token';
+                }
+            }else {
+                $scope.email = '';
+                $scope.apikey ='';
+            }
             $scope.userNameIs=data.message;
         },function(data){
             console.log(data)
