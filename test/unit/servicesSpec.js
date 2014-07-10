@@ -86,7 +86,7 @@ describe('UserLS', function(){
     }));  
 });
 describe('TokenInterceptor', function(){
-    //var UserLS, scope, ctrl; 
+    var UserLS; 
     var s2g_tokens = '{"userList":["tim2","tim"],"tim2":"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJuYW1lIjoidGltMiJ9.5cwoHp4JSLhsX3G4ZFhhYsb9U_MHWHnGfDYEV8yhvNk","tim":"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJuYW1lIjoidGltMiJ9.5cwoHp4JSLhsX3G4ZFhhYsb9U_MHWHnGfDYEV8yhvNk"}';
     var store= {};
     store = {storevars:['s2g_users','s2g_lists', 's2g_tokens'], s2g_tokens: s2g_tokens};
@@ -102,11 +102,102 @@ describe('TokenInterceptor', function(){
                 store[key] = value;
         });
     });
+    
     it('gets token for user tim', inject(function(TokenInterceptor){
         var tok = TokenInterceptor.getToken('tim');
         expect(tok).toBe('dog');
     }));
 }) ;  
 
-
-
+describe('TokenService', function(){
+    var UserLS; 
+    var s2g_tokens = '{"userList":["tim2","tim"],"tim2":"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJuYW1lIjoidGltMiJ9.5cwoHp4JSLhsX3G4ZFhhYsb9U_MHWHnGfDYEV8yhvNk","tim":"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJuYW1lIjoidGltMiJ9.5cwoHp4JSLhsX3G4ZFhhYsb9U_MHWHnGfDYEV8yhvNk"}';
+    var tokentim2 ='eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJuYW1lIjoidGltMiJ9.5cwoHp4JSLhsX3G4ZFhhYsb9U_MHWHnGfDYEV8yhvNk';
+    var store= {};
+    store = {storevars:['s2g_users','s2g_lists', 's2g_tokens'], s2g_tokens: s2g_tokens};
+    beforeEach(function() {
+        module('stuffAppServices');
+        // LocalStorage mock.
+        var key = 's2g_tokens';
+        spyOn(localStorage, 'getItem').andCallFake(function(key) {
+                return store[key];
+        });
+        Object.defineProperty(sessionStorage, "setItem", { writable: true });
+        spyOn(localStorage, 'setItem').andCallFake(function(key, value) {
+                store[key] = value;
+        });
+    });
+    beforeEach(module(function ($provide) {
+        $provide.value('UserLS', {
+            getLastLive: function(){
+                return 'tim2';
+            }
+        });
+    })); 
+    beforeEach(inject(function($injector) {
+        UserLS = $injector.get('TokenService');
+    }));          
+    it('getall() ', inject(function(TokenService){
+        var tok = TokenService.getAll();
+        expect(tok.userList[0]).toBe('tim2');
+    }));
+    it('getToken(tim2) ', inject(function(TokenService){
+        var tok = TokenService.getToken('tim2');
+        expect(tok.length).toBe(101);
+    }));    
+    it('getActiveToken() ', inject(function(TokenService){
+        var tok = TokenService.getActiveToken();
+        expect(tok.length).toBe(101);
+    }));
+    it('set(s)Token(fred, token)', inject(function(TokenService){
+        var name = 'fred';
+        var token ='ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd';
+        TokenService.setToken(name,token);
+        var tok = TokenService.getAll();
+        console.log(tok.userList)
+        expect(tok.userList.length).toBe(3);
+    })); 
+    it('sees if token exists', inject(function(TokenService){
+        var tf = TokenService.tokenExists();
+        expect(tf).toBe(true);
+    }));
+    it('deletes freds token', inject(function(TokenService){
+        TokenService.delUserToken('fred');
+        var tok = TokenService.getAll();
+        console.log(tok.userList)
+        expect(tok.userList.length).toBe(2);         
+    }));
+    it('deletes active token', inject(function(TokenService){
+        TokenService.deleteActiveToken();
+        var tok = TokenService.getAll();
+        console.log(tok.userList)
+        expect(tok.userList.length).toBe(1);     
+    }));
+    it('re-set(s)Token(tim2, token)', inject(function(TokenService){
+        TokenService.setToken('tim2',tokentim2);
+        var tok = TokenService.getAll();
+        console.log(tok.userList)
+        expect(tok.userList.length).toBe(2);
+    }));     
+    it('adds header to request', inject(function(TokenService){
+        var config = {};
+        config = TokenService.request(config);
+        console.log(config.headers.Authorization);
+        expect(config.headers.Authorization).toBeDefined();
+    }));
+    it('returns a response', inject(function(TokenService){
+        var res = {status: 200};
+        var response =  TokenService.response(res);
+        console.log(response);
+        expect(response.status).toBe(200);
+    }));    
+    it('deletes active token on response error', inject(function(TokenService){
+        var rej = {status: 401};
+        var response =  TokenService.responseError(rej);
+        var tok = TokenService.getAll();
+        console.log(response.then);
+        console.log(tok.userList)
+        expect(tok.userList.length).toBe(1);        
+        expect(response.then).toBeDefined();
+    }));
+});  

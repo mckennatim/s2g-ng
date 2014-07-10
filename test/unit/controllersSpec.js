@@ -8,7 +8,8 @@
             describe('UserCtrl', function(){
                 it('should have a dog scope thats petey', inject(function($rootScope, $controller){
                     var scope = $rootScope.$new();
-                    var ctrl = $controller("UserCtrl", {$scope: scope });
+                    var dbService = {updateUser: function(){}};
+                    var ctrl = $controller("UserCtrl", {$scope: scope, DbService: dbService });
                     expect(scope.dog).toBe('petey');        
                 }));
             });

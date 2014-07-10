@@ -54,7 +54,7 @@ stuffAppControllers.controller('InpCtrl', function ($scope, ItemsData, $filter) 
     };
 });
 
-stuffAppControllers.controller('RegisterCtrl', function ($scope, $http, AuthService, UserLS, TokenInterceptor) {
+stuffAppControllers.controller('RegisterCtrl', ['$scope', '$http', 'AuthService', 'UserLS',  'TokenInterceptor', 'DbService', function ($scope, $http, AuthService, UserLS, TokenInterceptor, DbService) {
     console.log(UserLS.users.lastLive)
     $scope.dog = 'butler';
     $scope.nameValid =/^\s*\w*\s*$/
@@ -84,9 +84,10 @@ stuffAppControllers.controller('RegisterCtrl', function ($scope, $http, AuthServ
                     $scope.apikey = '';
                 } else if (data.token.length>40){
                     //$scope.user = data;
-                    UserLS.postUser($scope.user, 'Authenticated');   
+                    //UserLS.postUser($scope.user, 'Authenticated');   
                     $scope.state=UserLS.getRegState(); 
-                    TokenInterceptor.setToken($scope.user.name, data.token)
+                    TokenInterceptor.setToken($scope.user.name, data.token);
+                    DbService.updateUser();
                     $scope.userNameIs = 'authenticated, token received';
                     $scope.apikey = '';                    
                 }
@@ -138,7 +139,7 @@ stuffAppControllers.controller('RegisterCtrl', function ($scope, $http, AuthServ
         });
         console.log('still alive')
     } 
-});
+}]);
 
 stuffAppControllers.controller('IsregCtrl', function ($scope, $state, UserLS, AuthService) {
         $scope.numUsers = UserLS.numUsers();
@@ -170,25 +171,23 @@ stuffAppControllers.controller('IsregCtrl', function ($scope, $state, UserLS, Au
 
 stuffAppControllers.controller('ListsCtrl', ['$scope', '$state', 'TokenInterceptor', 'UserLS',  function ($scope, $state, TokenInterceptor, UserLS) {
     if (TokenInterceptor.tokenExists()){
-        $scope.dog = UserLS.getLastLive();
+        var name = UserLS.getLastLive();
+        $scope.username = name;
+        $scope.lists = UserLS.getLists();
     } else{
         UserLS.setRegState('Get token');
         $state.go('register');
     }
-    var toks = TokenInterceptor.getAll();
-    $scope.frog = toks.tim == toks.tim2;
 }]);
 
-stuffAppControllers.controller('UserCtrl', function ($scope) {
+stuffAppControllers.controller('UserCtrl', ['$scope', 'DbService',  function ($scope, DbService) {
     $scope.dog = 'petey';
+    DbService.updateUser();
 
-});
+}]);
 stuffAppControllers.controller('ShopsCtrl', ['$scope', 'ListService', function ($scope, ListService) {
     $scope.dog = 'fritz';
-    ListService.aList('Jutebi').then(function(list){
-        console.log(list);
-        $scope.list = JSON.stringify(list, undefined, 2);
-    });
+
 }]);
 stuffAppControllers.controller('ConfigCtrl', ['$scope', function ($scope) {
     $scope.dog = 'kazzy';
