@@ -88,30 +88,6 @@ describe('UserLS', function(){
 describe('TokenInterceptor', function(){
     var UserLS; 
     var s2g_tokens = '{"userList":["tim2","tim"],"tim2":"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJuYW1lIjoidGltMiJ9.5cwoHp4JSLhsX3G4ZFhhYsb9U_MHWHnGfDYEV8yhvNk","tim":"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJuYW1lIjoidGltMiJ9.5cwoHp4JSLhsX3G4ZFhhYsb9U_MHWHnGfDYEV8yhvNk"}';
-    var store= {};
-    store = {storevars:['s2g_users','s2g_lists', 's2g_tokens'], s2g_tokens: s2g_tokens};
-    beforeEach(function() {
-        module('stuffAppServices');
-        // LocalStorage mock.
-        var key = 's2g_tokens';
-        spyOn(localStorage, 'getItem').andCallFake(function(key) {
-                return store[key];
-        });
-        Object.defineProperty(sessionStorage, "setItem", { writable: true });
-        spyOn(localStorage, 'setItem').andCallFake(function(key, value) {
-                store[key] = value;
-        });
-    });
-    
-    it('gets token for user tim', inject(function(TokenInterceptor){
-        var tok = TokenInterceptor.getToken('tim');
-        expect(tok).toBe('dog');
-    }));
-}) ;  
-
-describe('TokenService', function(){
-    var UserLS; 
-    var s2g_tokens = '{"userList":["tim2","tim"],"tim2":"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJuYW1lIjoidGltMiJ9.5cwoHp4JSLhsX3G4ZFhhYsb9U_MHWHnGfDYEV8yhvNk","tim":"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJuYW1lIjoidGltMiJ9.5cwoHp4JSLhsX3G4ZFhhYsb9U_MHWHnGfDYEV8yhvNk"}';
     var tokentim2 ='eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJuYW1lIjoidGltMiJ9.5cwoHp4JSLhsX3G4ZFhhYsb9U_MHWHnGfDYEV8yhvNk';
     var store= {};
     store = {storevars:['s2g_users','s2g_lists', 's2g_tokens'], s2g_tokens: s2g_tokens};
@@ -135,69 +111,74 @@ describe('TokenService', function(){
         });
     })); 
     beforeEach(inject(function($injector) {
-        UserLS = $injector.get('TokenService');
-    }));          
-    it('getall() ', inject(function(TokenService){
-        var tok = TokenService.getAll();
+        UserLS = $injector.get('TokenInterceptor');
+    })); 
+    it('gets token for user tim', inject(function(TokenInterceptor){
+        var tok = TokenInterceptor.getToken('tim');
+        expect(tok.length).toBe(101);
+    }));
+    it('getall() ', inject(function(TokenInterceptor){
+        var tok = TokenInterceptor.getAll();
         expect(tok.userList[0]).toBe('tim2');
     }));
-    it('getToken(tim2) ', inject(function(TokenService){
-        var tok = TokenService.getToken('tim2');
+    it('getToken(tim2) ', inject(function(TokenInterceptor){
+        var tok = TokenInterceptor.getToken('tim2');
         expect(tok.length).toBe(101);
     }));    
-    it('getActiveToken() ', inject(function(TokenService){
-        var tok = TokenService.getActiveToken();
+    it('getActiveToken() ', inject(function(TokenInterceptor){
+        var tok = TokenInterceptor.getActiveToken();
         expect(tok.length).toBe(101);
-    }));
-    it('set(s)Token(fred, token)', inject(function(TokenService){
+    })); 
+    it('set(s)Token(fred, token)', inject(function(TokenInterceptor){
         var name = 'fred';
         var token ='ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd';
-        TokenService.setToken(name,token);
-        var tok = TokenService.getAll();
+        TokenInterceptor.setToken(name,token);
+        var tok = TokenInterceptor.getAll();
         console.log(tok.userList)
         expect(tok.userList.length).toBe(3);
     })); 
-    it('sees if token exists', inject(function(TokenService){
-        var tf = TokenService.tokenExists();
+    it('sees if token exists', inject(function(TokenInterceptor){
+        var tf = TokenInterceptor.tokenExists();
         expect(tf).toBe(true);
     }));
-    it('deletes freds token', inject(function(TokenService){
-        TokenService.delUserToken('fred');
-        var tok = TokenService.getAll();
+    it('deletes freds token', inject(function(TokenInterceptor){
+        TokenInterceptor.delUserToken('fred');
+        var tok = TokenInterceptor.getAll();
         console.log(tok.userList)
         expect(tok.userList.length).toBe(2);         
     }));
-    it('deletes active token', inject(function(TokenService){
-        TokenService.deleteActiveToken();
-        var tok = TokenService.getAll();
+    it('deletes active token', inject(function(TokenInterceptor){
+        TokenInterceptor.deleteActiveToken();
+        var tok = TokenInterceptor.getAll();
         console.log(tok.userList)
         expect(tok.userList.length).toBe(1);     
     }));
-    it('re-set(s)Token(tim2, token)', inject(function(TokenService){
-        TokenService.setToken('tim2',tokentim2);
-        var tok = TokenService.getAll();
+    it('re-set(s)Token(tim2, token)', inject(function(TokenInterceptor){
+        TokenInterceptor.setToken('tim2',tokentim2);
+        var tok = TokenInterceptor.getAll();
         console.log(tok.userList)
         expect(tok.userList.length).toBe(2);
     }));     
-    it('adds header to request', inject(function(TokenService){
+    it('adds header to request', inject(function(TokenInterceptor){
         var config = {};
-        config = TokenService.request(config);
+        config = TokenInterceptor.request(config);
         console.log(config.headers.Authorization);
         expect(config.headers.Authorization).toBeDefined();
     }));
-    it('returns a response', inject(function(TokenService){
+    it('returns a response', inject(function(TokenInterceptor){
         var res = {status: 200};
-        var response =  TokenService.response(res);
+        var response =  TokenInterceptor.response(res);
         console.log(response);
         expect(response.status).toBe(200);
     }));    
-    it('deletes active token on response error', inject(function(TokenService){
+    it('deletes active token on response error', inject(function(TokenInterceptor){
         var rej = {status: 401};
-        var response =  TokenService.responseError(rej);
-        var tok = TokenService.getAll();
+        var response =  TokenInterceptor.responseError(rej);
+        var tok = TokenInterceptor.getAll();
         console.log(response.then);
         console.log(tok.userList)
         expect(tok.userList.length).toBe(1);        
         expect(response.then).toBeDefined();
-    }));
-});  
+    }));       
+}) ;  
+
