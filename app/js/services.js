@@ -64,20 +64,22 @@ stuffAppServices.factory('UsersData', function($http) {
     }
 });
 stuffAppServices.factory('UserLS', function() {
-        var key = 's2g_users';
-        var blankUsers= {lastLive:0, regState: 'Register', userList:[]};
-        var getAll=function(){
-        var ret = {};
-        if(!localStorage.getItem(key)){
-                ret = blankUsers;
-                localStorage.setItem(key, JSON.stringify(ret));
-        } else {
-                ret=JSON.parse(localStorage.getItem(key));
-        }
-        return ret;    
-        console.log(getAll())
-    }
-    var users = getAll();
+    var key = 's2g_users';
+    var state = 's2g_state';
+    var blankUsers= {lastLive:0, regState: 'Register', regMessage: '', userList:[]};
+    // var getAll=function(){
+    //     console.log('in getAll internal')
+    //     var ret = {};
+    //     if(!localStorage.getItem(key)){
+    //             ret = blankUsers;
+    //             localStorage.setItem(key, JSON.stringify(ret));
+    //     } else {
+    //             ret=JSON.parse(localStorage.getItem(key));
+    //     }
+    //     return ret;    
+    //     console.log(getAll())
+    // }
+    // var users = getAll();
     return {
         key: key,
         blankUsers: blankUsers,
@@ -85,7 +87,8 @@ stuffAppServices.factory('UserLS', function() {
         currentUser: this.blankUser,
         getLastLive: function(){
             var users =   this.getAll();
-            console.log( users);
+            //console.log( users.userList[users.lastLive]);
+            //console.log(users.lastLive)
             return users.userList[users.lastLive];
         },
         setLastLive: function(name){
@@ -97,11 +100,12 @@ stuffAppServices.factory('UserLS', function() {
             return idx;
         },
         getAll: function () {
-            //console.log(localStorage)    
+            //console.log(localStorage.getItem(this.key).length)    
             var ret = {};
-            if(!localStorage.getItem(this.key)){
+            if(!localStorage.getItem(this.key) || localStorage.getItem(this.key).length <10 ){
+                console.log('UH OH  RECREATING  s2g_users')
                 ret = this.blankUsers;
-                //console.log(JSON.stringify(ret))
+                console.log(JSON.stringify(ret))
                 localStorage.setItem(this.key, JSON.stringify(ret));
             } else {
                 //console.log(localStorage.getItem(this.key));
@@ -112,19 +116,41 @@ stuffAppServices.factory('UserLS', function() {
         },
         getLists: function(){
             var al = this.getAll();
-            var ret= al[al.userList[al.lastLive]].lists;
+            var usr = al[al.userList[al.lastLive]]
+            var ret= usr.lists;
             console.log(ret);
+            return ret;
+        },
+        getDefaultList : function(){
+            var al = this.getAll();
+            var usr = al[al.userList[al.lastLive]]
+            var lists= usr.lists;
+            var def = usr.defaultList;
+            var ret = lists[def];
+            console.log(usr);
             return ret;
         },
         setRegState: function(st){
             var ret = this.getAll();
             ret.regState = st;
             localStorage.setItem(this.key, JSON.stringify(ret));
+            return st;
         },
         getRegState: function(){
             var ret = this.getAll();
             return ret.regState;
         },
+        getRegMessage: function(){
+            var ax = this.getAll();
+            return ax.regMessage;
+        },
+        setRegMessage: function(message){
+            var ax = this.getAll();
+            ax.regMessage=message;
+            localStorage.setItem(this.key, JSON.stringify(ax));
+            return message
+        },
+
         getUser: function (user) {   
             var ret = this.getAll()
             return ret[user];
@@ -186,7 +212,9 @@ stuffAppServices.factory('AuthService', ['$http', '$q', 'DbService',  function($
                     if (status==0){
                         deferred.reject({message: 'server is down'})
                     } else if(status==401){
-                        deferred.reject({message: 'Authorization failed, try re-entering apikey'})
+                        deferred.reject({message: 'Authorization failed, try re-entering apikey'})               
+                    } else if(status==404){
+                        deferred.reject({message: '404, try re-entering apikey'})
                     }else{
                         deferred.reject({message: 'no clue on what is wrong'})
                     }
@@ -204,7 +232,11 @@ stuffAppServices.factory('AuthService', ['$http', '$q', 'DbService',  function($
                 }).
                 error(function(data, status){
                     console.log(data || "Request failed");
-                    deferred.reject({message: 'server is down'})
+                    if (status==0){
+                        deferred.reject({message: 'user not found'});
+                    } else {
+                        deferred.reject({message: 'server is down'});
+                    }
                 });
             return deferred.promise;
         },
@@ -226,7 +258,7 @@ stuffAppServices.factory('AuthService', ['$http', '$q', 'DbService',  function($
         }    
     }
 }]);
-stuffAppServices.factory('DbService', ['$http', '$q', 'UserLS', function($http, $q, UserLS) {
+stuffAppServices.factory('DbService', ['$http', '$q', 'UserLS','TokenInterceptor' , function($http, $q, UserLS, TokenInterceptor) {
     return {
         updateUser: function(){ 
             var uname = UserLS.getLastLive()
@@ -246,25 +278,89 @@ stuffAppServices.factory('DbService', ['$http', '$q', 'UserLS', function($http, 
                 });
             return deferred.promise;
         },
-        aList: function(list) {
+        getList: function(list) {
             var url=httpLoc + 'lists/'+list;      
             var deferred = $q.defer();
-            $http.get(url, {withCredentials:true}).   
+            //var config = {};
+            //config = TokenInterceptor.request(config);
+            //console.log(config);
+            $http.get(url).   
+            //$http.get(url, config).   
+            //$http.get(url, {headers: {Authorization: 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJuYW1lIjoidGltIn0.LmoK1Nr8uA4hrGr25L2AlKXs6U832Z_lE6JGznHJfFs'}}).   
                 success(function(data, status) {
-                    console.log(data);
-                    console.log(status);
                     deferred.resolve(data);
                 }).
                 error(function(data, status){
-                    console.log(data || "Request failed");
-                    console.log(status);
-                    deferred.reject({message: 'server is down'})
+                    deferred.reject(data)
                 });
             return deferred.promise;
         } 
     }
 }]);
-stuffAppServices.factory('TokenInterceptor', ['$q', 'UserLS', function ($q, UserLS) {
+stuffAppServices.factory('TokenInterceptor', ['$q', '$injector', function ($q, $injector) {
+    var UserLS=$injector.get('UserLS');
+    var TokenService = $injector.get('TokenService');
+    var key = 's2g_tokens';
+    var blankTokens= {userList:[]};
+    return { 
+        request: function (config) {
+            var blankTokens= {userList:[]};
+            // var getActiveToken = function(){
+            //     var name = UserLS.getLastLive();
+            //     //console.log(name)
+            //     var getAll= function(){
+            //         //console.log(localStorage)    
+            //         var ret = {};
+            //         if(!localStorage.getItem('s2g_tokens')){
+            //             ret = blankTokens;
+            //             //console.log(JSON.stringify(ret))
+            //             localStorage.setItem('s2g_tokens', JSON.stringify(ret));
+            //         } else {
+            //             //console.log(localStorage.getItem(this.key));
+            //             //console.log(JSON.parse(localStorage.getItem(key)).userList);
+            //             ret=JSON.parse(localStorage.getItem("s2g_tokens"));
+            //         }
+            //         return ret;
+            //     }
+            //     var ax = getAll();
+            //     return ax[name];
+            // }
+            var tok = TokenService.getActiveToken();
+            //var tok = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJuYW1lIjoidGltIn0.LmoK1Nr8uA4hrGr25L2AlKXs6U832Z_lE6JGznHJfFd'; //broken token should cause error
+            //console.log(tok);
+            config.headers = config.headers || {};
+            if (tok) {
+                    config.headers.Authorization = 'Bearer ' + tok
+            }
+            return config;
+        },
+        requestError: function(rejection) {
+            return $q.reject(rejection);
+        },
+        /* Set Authentication.isAuthenticated to true if 200 received */
+        response: function (response) {
+            // if (response != null && response.status == 200 && this.getActiveToken() && !AuthenticationService.isAuthenticated) {
+            //     AuthenticationService.isAuthenticated = true;
+            // }
+            return response || $q.when(response);
+        },
+        /* Revoke client authentication if 401 is received */
+        responseError: function(rejection) {
+            var tok = TokenService.getActiveToken();
+            console.log(tok)
+            if (tok) {
+                console.log(rejection)
+                if (rejection != null && rejection.status === 401) {
+                    TokenService.deleteActiveToken();
+                    //$state.go('register');
+                }
+            }
+            return $q.reject(rejection);               
+        }
+    };
+}]);
+
+stuffAppServices.factory('TokenService', ['$q', 'UserLS', function ($q, UserLS) {
     var key = 's2g_tokens';
     var blankTokens= {userList:[]};
     return { 
@@ -295,18 +391,24 @@ stuffAppServices.factory('TokenInterceptor', ['$q', 'UserLS', function ($q, User
         },  
         getToken: function(name){
             var al =this.getAll();
-            return al[name];        	
+            return al[name];            
         },
         getActiveToken: function(){
             var name = UserLS.getLastLive();
+            console.log(name)
             return this.getToken(name);
         },
         tokenExists: function(){
             var name = UserLS.getLastLive();
-            var al =this.getAll();
-            if (al.userList.indexOf(name) >   -1){
-                return true;
-            }         
+            //console.log(name==undefined)
+            if (typeof name != 'undefined'){
+                //console.log('damn stil here')
+                var al =this.getAll();
+                if (al.userList.indexOf(name) >   -1){
+                    return true;
+                }
+                return false                 
+            }   
             return false; 
         },
         delUserToken: function(name){
@@ -322,34 +424,6 @@ stuffAppServices.factory('TokenInterceptor', ['$q', 'UserLS', function ($q, User
         deleteActiveToken: function(){
             var name = UserLS.getLastLive();
             this.delUserToken(name);
-        },
-        request: function (config) {
-            var tok = this.getActiveToken();
-            console.log(tok);
-            config.headers = config.headers || {};
-            if (tok) {
-                    config.headers.Authorization = 'Bearer ' + tok
-            }
-            return config;
-        },
-        requestError: function(rejection) {
-            return $q.reject(rejection);
-        },
-        /* Set Authentication.isAuthenticated to true if 200 received */
-        response: function (response) {
-            // if (response != null && response.status == 200 && this.getActiveToken() && !AuthenticationService.isAuthenticated) {
-            //     AuthenticationService.isAuthenticated = true;
-            // }
-            return response || $q.when(response);
-        },
-        /* Revoke client authentication if 401 is received */
-        responseError: function(rejection) {
-            if (rejection != null && rejection.status === 401) {
-                this.deleteActiveToken();
-                //$state.go('register');
-            }
-            return $q.reject(rejection);
         }
     };
 }]);
-

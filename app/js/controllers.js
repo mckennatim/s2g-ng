@@ -27,69 +27,57 @@ stuffAppControllers.controller('TimeCtrl', function ($scope, UsersData) {
 
 stuffAppControllers.controller('InpCtrl', function ($scope, ItemsData, $filter) {
     var list;
-    ItemsData.get().then(function(d){
-        console.log(d);
-        list= $scope.list = d.data;
-        $scope.$watch('list', function(newValue, oldValue){
-            console.log(list);
-            $scope.cnt = $filter('filter')(list, {done:false}).length;
-            if (newValue !== oldValue) { // This prevents unneeded calls to the local storage
-                ItemsData.put(list);
-            }
-        }, true);
-    });
-    $scope.query='';
-    $scope.rubmit = function(){
-        if ($scope.query) {
-            $scope.list.push({lid:26, product:this.query, done:false});
-            $scope.query = '';
-         }
-    };
-    $scope.clearTbox = function(){$scope.query = '';};
-    $scope.remove= function(item){
-        console.log(item.product);
-        var idx = $scope.list.indexOf(item);
-        $scope.list.splice(idx,1);
-        console.log(idx);
-    };
+    // ItemsData.get().then(function(d){
+    //     console.log(d);
+    //     list= $scope.list = d.data;
+    //     $scope.$watch('list', function(newValue, oldValue){
+    //         console.log(list);
+    //         $scope.cnt = $filter('filter')(list, {done:false}).length;
+    //         if (newValue !== oldValue) { // This prevents unneeded calls to the local storage
+    //             ItemsData.put(list);
+    //         }
+    //     }, true);
+    // });
+    // $scope.query='';
+    // $scope.rubmit = function(){
+    //     if ($scope.query) {
+    //         $scope.list.push({lid:26, product:this.query, done:false});
+    //         $scope.query = '';
+    //      }
+    // };
+    // $scope.clearTbox = function(){$scope.query = '';};
+    // $scope.remove= function(item){
+    //     console.log(item.product);
+    //     var idx = $scope.list.indexOf(item);
+    //     $scope.list.splice(idx,1);
+    //     console.log(idx);
+    // };
 });
 
-stuffAppControllers.controller('RegisterCtrl', ['$scope', '$http', 'AuthService', 'UserLS',  'TokenInterceptor', 'DbService', function ($scope, $http, AuthService, UserLS, TokenInterceptor, DbService) {
-    var auth= function(apikey, name){
-        AuthService.auth(apikey, name).then(function(data){
-            //console.log(data)
-            if(Object.keys(data)[0]=='message'){
-                response = data.message
-                console.log(data)
-                $scope.userNameIs = data.message;
-                $scope.apikey = '';
-            } else if (data.token.length>40){  
-                $scope.state=UserLS.getRegState(); 
-                UserLS.setLastLive(name);
-                TokenInterceptor.setToken(name, data.token);
-                DbService.updateUser();
-                $scope.userNameIs = 'authenticated, token received';
-                $scope.apikey = '';                    
-            }
-        }, function(data){//if error
-            console.log(data)
-            $scope.userNameIs = data.message;
-            response = data;
-        });
-    };
-    console.log(UserLS.getLastLive())
+stuffAppControllers.controller('RegisterCtrl', ['$scope', '$http', 'AuthService', 'UserLS',  'TokenService', 'DbService', function ($scope, $http, AuthService, UserLS, TokenService, DbService) {
+    if (TokenService.tokenExists()){
+        var message = 'all set you are authorized and have token';
+        $scope.state = UserLS.setRegState('Authenticated');
+        $scope.message=UserLS.setRegMessage(message);
+    } else {
+         var message = 'you seem to be lacking a token';
+        $scope.message=UserLS.setRegMessage(message);
+    }
+    console.log(UserLS.getRegMessage());
     $scope.dog = 'butler';
     $scope.nameValid =/^\s*\w*\s*$/
     $scope.user = UserLS.getLastLiveUserRec()  || UserLS.blankUser;
     console.log($scope.user);
     $scope.state=UserLS.getRegState();
+    if ($scope.state=='Enter apikey'){
+        $scope.message = UserLS.setRegMessage('will give you token when we check your apikey');
+    }
     console.log($scope.state);
     $scope.username=$scope.user.name || '';
     $scope.email=$scope.user.email || '';
     $scope.apikey=$scope.user.apikey || '';
     $scope.isuUser='';
     $scope.isMatch='';
-    $scope.userNameIs=''
     console.log('in register control')
     $scope.submit = function(){
         $scope.user.name = $scope.username
@@ -104,13 +92,13 @@ stuffAppControllers.controller('RegisterCtrl', ['$scope', '$http', 'AuthService'
                 console.log(data);
                 response = data.message;
                 if (['available', 'match'].indexOf(response)>-1){
-                    console.log('resonse is either available or match')
+                    console.log('response is either available or match')
                     UserLS.postUser($scope.user, 'Enter apikey');
                     $scope.state=UserLS.getRegState(); 
-                    $scope.userNameIs = response;
+                    $scope.message =UserLS.setRegMessage(response + ', apikey sent');
                 } else if(response=='conflict'){
                     console.log('response is conflict')
-                    $scope.userNameIs = ' Either the user is registered with a different email or email is in use by another user. Try something else.';
+                    $scope.message = UserLS.setRegMessage( ' Either the user is registered with a different email or email is in use by another user. Try something else.');
                 }
             },function(data){
                 console.log(Object.keys(data))
@@ -128,28 +116,57 @@ stuffAppControllers.controller('RegisterCtrl', ['$scope', '$http', 'AuthService'
     $scope.doesNameExist= function(){
         console.log($scope.username+' changed')
         $scope.state='Register'
-        $scope.userNameIs = ' will check status...'
+        $scope.message = ' will check status...'
         AuthService.isUser($scope.username).then(function(data){
             console.log(data)
             var userls = UserLS.getUser($scope.username);
             if (userls){
+                UserLS.setLastLive($scope.username);
                 console.log(userls)
                 $scope.email=userls.email;
                 $scope.apikey=userls.apikey;
-                if ($scope.apikey.length>10){
-                    $scope.state = 'Get token';
+                if (TokenService.tokenExists()){
+                    var message = 'all set you are authorized and have token';
+                    $scope.state = UserLS.setRegState('Authenticated');
+                    $scope.message=UserLS.setRegMessage(message);
+                } else if ($scope.apikey.length>10){
+                    var message = 'you seem to be lacking a token';
+                    $scope.state = UserLS.setRegState('Get token');
+                    $scope.message=UserLS.setRegMessage(message);
                 }
             }else {
                 $scope.email = '';
                 $scope.apikey ='';
+                $scope.message=UserLS.setRegMessage(data.message + ' on server but not here');
             }
-            $scope.userNameIs=data.message;
         },function(data){
             console.log(data)
-            $scope.userNameIs=data.message;
+            $scope.message=UserLS.setRegMessage(data.message);
         });
         console.log('still alive')
     } 
+    var auth= function(apikey, name){
+        AuthService.auth(apikey, name).then(function(data){
+            //console.log(data)
+            if(Object.keys(data)[0]=='message'){
+                response = data.message
+                console.log(data)
+                $scope.message = UserLS.setRegMessage(data.message);
+                $scope.apikey = '';
+            } else if (data.token.length>40){  
+                //$scope.state=UserLS.getRegState(); 
+                UserLS.setLastLive(name);
+                TokenService.setToken(name, data.token);
+                DbService.updateUser();
+                $scope.message = UserLS.setRegMessage('authenticated, token received');
+                $scope.state = UserLS.setRegState('Authenticated');
+                $scope.apikey = '';                    
+            }
+        }, function(data){//if error
+            console.log(data)
+            $scope.message = UserLS.setRegMessage(data.message);
+        });
+    };    
 }]);
 
 stuffAppControllers.controller('IsregCtrl', function ($scope, $state, UserLS, AuthService) {
@@ -180,11 +197,44 @@ stuffAppControllers.controller('IsregCtrl', function ($scope, $state, UserLS, Au
         console.log($scope.numUsers);
 });
 
-stuffAppControllers.controller('ListsCtrl', ['$scope', '$state', 'TokenInterceptor', 'UserLS',  function ($scope, $state, TokenInterceptor, UserLS) {
-    if (TokenInterceptor.tokenExists()){
+stuffAppControllers.controller('ListsCtrl', ['$scope', '$state', 'TokenService', 'UserLS',  function ($scope, $state, TokenService, UserLS) {
+    if (TokenService.tokenExists()){
         var name = UserLS.getLastLive();
         $scope.username = name;
         $scope.lists = UserLS.getLists();
+        $scope.default = UserLS.getDefaultList();
+    } else{
+        UserLS.setRegState('Get token');
+        $state.go('register');
+    }
+}]);
+
+stuffAppControllers.controller('ListCtrl', ['$scope', '$state', 'TokenService', 'UserLS', 'DbService', function ($scope, $state, TokenService, UserLS, DbService) {
+    if (TokenService.tokenExists()){
+        console.log('in  ListCtrl')
+        var name = UserLS.getLastLive();
+        console.log(name);
+        $scope.name = name;
+        var dl= UserLS.getDefaultList();
+        console.log(dl);
+        if (dl){
+            var lid = dl.lid;
+            console.log(lid)
+            $scope.lid= lid;
+            DbService.getList(lid).then(function(data){
+                $scope.list = data;   
+            }, function(error){
+                if(error.search('Signature verification failed')>-1){
+                    UserLS.setRegMessage('Token did not work, try getting another');
+                    UserLS.setRegState('Get token');
+                    $state.go('register');
+                } ;
+                console.log(typeof error);
+            });                 
+        } else {
+            console.log('aint no default list');
+            $state.go('lists');
+        }   
     } else{
         UserLS.setRegState('Get token');
         $state.go('register');
@@ -204,7 +254,7 @@ stuffAppControllers.controller('ConfigCtrl', ['$scope', function ($scope) {
     $scope.dog = 'kazzy';
 
 }]);
-stuffAppControllers.controller('AdminCtrl', ['$scope', 'UserLS',  'TokenInterceptor', function ($scope, UserLS, TokenInterceptor) {
+stuffAppControllers.controller('AdminCtrl', ['$scope', 'UserLS',  'TokenService', function ($scope, UserLS, TokenService) {
     $scope.username='';
     $scope.dog = 'piper';
     $scope.output = '';
@@ -222,14 +272,14 @@ stuffAppControllers.controller('AdminCtrl', ['$scope', 'UserLS',  'TokenIntercep
     $scope.usernameT='';
     $scope.outputT= '';
     $scope.listAllT = function(){
-        $scope.outputT=TokenInterceptor.getAll();
+        $scope.outputT=TokenService.getAll();
         $scope.usernameT='';
     }; 
     $scope.findT = function(){
-        $scope.outputT=TokenInterceptor.getToken($scope.usernameT);
+        $scope.outputT=TokenService.getToken($scope.usernameT);
     };  
     $scope.delT = function(){
-        $scope.outputT=TokenInterceptor.delUserToken($scope.usernameT);
+        $scope.outputT=TokenService.delUserToken($scope.usernameT);
         $scope.usernameT='';
     };
 }]);

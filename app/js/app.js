@@ -45,6 +45,10 @@ config(['$urlRouterProvider', '$stateProvider', function($urlRouterProvider, $st
   ['$httpProvider', function($httpProvider) {
     $httpProvider.defaults.useXDomain = true;
     delete $httpProvider.defaults.headers.common['X-Requested-With'];
-    $httpProvider.interceptors.push('TokenInterceptor');
   }
 ]);
+
+StuffApp.config(function ($httpProvider) {
+    $httpProvider.interceptors.push('TokenInterceptor');
+    console.log($httpProvider.interceptors);
+});
