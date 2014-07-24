@@ -46,6 +46,146 @@ stuffAppServices.factory('ItemsData', function($http) {
         kitty: 'mabibi'
     };
 });
+
+stuffAppServices.factory( 'ListService', ['$q', '$http', 'DbService', 'UserLS', function($q, $http, DbService, UserLS){
+    var key = 's2g_lists';
+    var blankLists = {listsList: []};
+    return{
+        getDefault: function(){
+            var name = UserLS.getLastLive();
+            var dl= UserLS.getDefaultList();
+            return dl;
+            if(dl){return dl.lid;}           
+        },
+        getList: function(listInfo){
+            //quickly send list in localStorage then update LS and send that
+            console.log('in getList')
+            var lid = listInfo.lid;
+            var shops = listInfo.shops;
+            var list = this.getLS(lid);
+            // if(! list){
+            //     list = this.getDB(lid);
+            // }
+            if (! list){
+                list = {lid: lid, shops: shops, timestamp: 0, list: [] }
+            };
+            return list
+        },
+        getLS:  function(listInfo){
+            console.log('in getLS')
+            var ax, lid, shops, list;
+            ax = this.getAll();
+            lid = listInfo.lid;
+            shops = listInfo.shops;
+            list = ax[lid];
+            if (! list){
+                list = {lid: lid, shops: shops, timestamp: 0, list: [] }
+                putLS(list);
+            };            
+            return list;
+        },
+        putLS: function(list){
+            console.log('in putLS')
+            var ax = this.getAll();
+            ax.listsList.push(list.lid)
+            ax.listsList = _.uniq(ax.listsList)
+            ax[list.lid]=list;
+            console.log(JSON.stringify(ax))
+            localStorage.setItem(key, JSON.stringify(ax));
+            return ax;         
+        },
+        getAll: function(){
+            var ret = {};
+            if(!localStorage.getItem(key) || localStorage.getItem(key).length <10 ){
+                console.log('UH OH  RECREATING  '+key)
+                ret = blankLists;
+                localStorage.setItem(key, JSON.stringify(ret));
+            } else {
+                ret=JSON.parse(localStorage.getItem(key));
+            }
+            return ret;            
+        },
+        getDB: function(lid){
+
+        },
+        update: function(list){
+            console.log('in update')
+            var c, p, s, updItems, cts, pts, sts, deferred, lid;
+            var instance =this;
+            lid = list.lid
+            c = list;
+            console.log(c.items)
+            cts = Date.now();
+            p = this.getLS(list);
+            pts = p.timestamp;
+            deferred = $q.defer();
+            var url=httpLoc + 'lists/'+lid; 
+            $http.get(url).   
+                success(function(data, status) {
+                    s = data;
+                    sts = s.timestamp
+                    if (sts > pts){ //if server has been updated since prior LS
+                        updItems=instance.merge(p.items, c.items, s.items);
+                    } else {
+                        updItems=c.items;
+                    }
+                    console.log(JSON.stringify(updItems));
+                    s.items = updItems;
+                    s.timestamp = cts;
+                    instance.putLS(s);
+                    //send to server
+                    deferred.resolve(s);
+                }).
+                error(function(data, status){
+                    deferred.reject(data)
+                });
+            s = deferred.promise;   
+            return s;            
+        },
+         difference: function(array){
+            var prop =arguments[2];
+            var rest = Array.prototype.concat.apply(Array.prototype, Array.prototype.slice.call(arguments, 1));
+            var containsEquals = function(obj, target) {
+                if (obj == null) return false;
+                return _.any(obj, function(value) {
+                    return value[prop] === target[prop];
+                });
+            };
+            return _.filter(array, function(value){
+                return ! containsEquals(rest, value); 
+            });
+        }, 
+        union: function (arr1, arr2, prop) {
+            var sa1= JSON.stringify(arr1);
+            var arr3 = JSON.parse(sa1);
+            _.each(arr2, function(arr2obj) {
+                var arr1obj = _.find(arr1, function(arr1obj) {
+                    return arr1obj[prop] === arr2obj[prop];
+                });
+                arr1obj ? _.extend(arr3, arr2obj) : arr3.push(arr2obj);
+            });
+            return arr3
+        },    
+        merge: function(pz2,cz2,sz2){
+            // (C\(P\S))U(S\(P\C))
+            var condT = {'done': true};
+            var condF = {'done': false};
+            var p = _.filter(pz2, condF);
+            var c = _.filter(cz2, condF);
+            var s = _.filter(sz2, condF);
+            var sT = _.filter(sz2, condT);
+            var ps = this.difference(p,s, 'product');
+            var pc = this.difference(p,c, 'product' );
+            var cps = this.difference(c,ps, 'product');
+            var spc = this.difference(s,pc, 'product');
+            var arr3 = this.union(spc, cps, 'product');
+            //(MERGED{'done':false}) U (Server,{'done': true})
+            var arr4 = this.union(arr3, sT, 'product');
+            return arr4
+        }       
+    }
+}]);
+
 stuffAppServices.factory('UsersData', function($http) {
     return {
         post: function () {
@@ -127,7 +267,7 @@ stuffAppServices.factory('UserLS', function() {
             var lists= usr.lists;
             var def = usr.defaultList;
             var ret = lists[def];
-            console.log(usr);
+            //console.log(usr);
             return ret;
         },
         setRegState: function(st){

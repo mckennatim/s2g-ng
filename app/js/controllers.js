@@ -209,44 +209,110 @@ stuffAppControllers.controller('ListsCtrl', ['$scope', '$state', 'TokenService',
     }
 }]);
 
-stuffAppControllers.controller('ListCtrl', ['$scope', '$state', 'TokenService', 'UserLS', 'DbService', function ($scope, $state, TokenService, UserLS, DbService) {
+stuffAppControllers.controller('ListCtrl', ['$scope', '$state', '$filter', 'ListService', 'TokenService', 'UserLS', 'DbService', function ($scope, $state, $filter, ListService, TokenService, UserLS, DbService) {
     if (TokenService.tokenExists()){
-        console.log('in  ListCtrl')
-        var name = UserLS.getLastLive();
-        console.log(name);
-        $scope.name = name;
-        var dl= UserLS.getDefaultList();
-        console.log(dl);
-        if (dl){
-            var lid = dl.lid;
-            console.log(lid)
-            $scope.lid= lid;
-            DbService.getList(lid).then(function(data){
-                $scope.list = data;   
-            }, function(error){
-                if(error.search('Signature verification failed')>-1){
-                    UserLS.setRegMessage('Token did not work, try getting another');
-                    UserLS.setRegState('Get token');
-                    $state.go('register');
-                } ;
-                console.log(typeof error);
-            });                 
-        } else {
-            console.log('aint no default list');
-            $state.go('lists');
-        }   
+        var lid, list, listInfo, items;
+        listInfo = ListService.getDefault();//defaultLid of lastLive user 
+        if (listInfo){lid= $scope.lid = listInfo.lid;}
+        console.log(lid)
+        if (! lid) {$state.go('lists');}  
+        list = ListService.getLS(listInfo);
+        items =$scope.items = list.items
+        console.log(listInfo)
+        ListService.update(list).then(function(data){
+            console.log(data.items); 
+            items = $scope.items =data.items ;
+            var filt = $filter('filter')(items, {done:false});
+            if(filt){
+                $scope.cnt = $filter('filter')(items, {done:false}).length;                                                        
+            } else {
+                $scope.cnt = 0;
+            }
+            $scope.$watch('items', function(newValue, oldValue){
+                console.log('watch is triggered');
+                console.log(items);
+                list.items = items;
+                list.timestamp = Date.now();
+                $scope.cnt = $filter('filter')(items, {done:false}).length;
+                console.log(JSON.stringify(newValue));
+                console.log(JSON.stringify(oldValue));
+                console.log(newValue == oldValue)
+                if (newValue !== oldValue) { // This prevents unneeded calls to update
+                    ListService.update(list).then(function(data){
+                        console.log(data.items); 
+                        items = $scope.items =data.items              
+                    }, function(data){//on error do nothing
+                    });
+                }
+            }, true);   
+        }, function(data){
+        });
+        $scope.query='';
+        $scope.rubmit = function(){
+            if ($scope.query) {
+                console.log($scope.query)
+                $scope.items.push({product:this.query, done:false});
+                console.log($scope.items);
+                $scope.query = '';
+             }
+        };
+        $scope.clearTbox = function(){$scope.query = '';};
+        $scope.remove= function(item){
+            console.log(item.product);
+            var idx = $scope.items.indexOf(item);
+            $scope.items.splice(idx,1);
+            console.log(idx);
+        };        
     } else{
         UserLS.setRegState('Get token');
         $state.go('register');
     }
 }]);
+//     if (TokenService.tokenExists()){
+//         console.log('in  ListCtrl')
+//         var name = UserLS.getLastLive();
+//         console.log(name);
+//         $scope.name = name;
+//         var dl= UserLS.getDefaultList();
+//         console.log(dl);
+//         if (dl){
+//             var lid = dl.lid;
+//             console.log(lid)
+//             $scope.lid= lid;
+//             DbService.getList(lid).then(function(data){
+//                 $scope.listInfo = data;   
+//                 var list = $scope.list = data.list;
+//                 $scope.$watch('list', function(newValue, oldValue){
+//                     console.log(list);
+//                     $scope.cnt = $filter('filter')(list, {done:false}).length;
+//                     if (newValue !== oldValue) { // This prevents unneeded calls to the local storage
+//                         ItemsData.put(list);
+//                     }
+//                 }, true);                
+//             }, function(error){
+//                 if(error.search('Signature verification failed')>-1){
+//                     UserLS.setRegMessage('Token did not work, try getting another');
+//                     UserLS.setRegState('Get token');
+//                     $state.go('register');
+//                 } ;
+//                 console.log(typeof error);
+//             });                 
+//         } else {
+//             console.log('aint no default list');
+//             $state.go('lists');
+//         }   
+//     } else{
+//         UserLS.setRegState('Get token');
+//         $state.go('register');
+//     }
+// }]);
 
 stuffAppControllers.controller('UserCtrl', ['$scope', 'DbService',  function ($scope, DbService) {
     $scope.dog = 'petey';
     DbService.updateUser();
 
 }]);
-stuffAppControllers.controller('ShopsCtrl', ['$scope', 'ListService', function ($scope, ListService) {
+stuffAppControllers.controller('ShopsCtrl', ['$scope', 'DbService', function ($scope, DbService) {
     $scope.dog = 'fritz';
 
 }]);
@@ -283,3 +349,9 @@ stuffAppControllers.controller('AdminCtrl', ['$scope', 'UserLS',  'TokenService'
         $scope.usernameT='';
     };
 }]);
+
+        // ListService.updateList(lid).then(function(data){
+
+        // }, function(data){
+
+        // });
