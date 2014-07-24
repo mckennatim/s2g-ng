@@ -133,7 +133,14 @@ stuffAppServices.factory( 'ListService', ['$q', '$http', 'DbService', 'UserLS', 
                     s.items = updItems;
                     s.timestamp = cts;
                     instance.putLS(s);
-                    //send to server
+                    $http.put(url, {timestamp:cts, items: updItems}).
+                        success(function(data, status) {
+                            console.log(status)
+                        }).                
+                        error(function(data, status){
+                            console.log(status)
+                        });
+
                     deferred.resolve(s);
                 }).
                 error(function(data, status){
