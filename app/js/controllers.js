@@ -218,9 +218,9 @@ stuffAppControllers.controller('ListCtrl', ['$scope', '$state', '$filter', 'List
         if (! lid) {$state.go('lists');}  
         list = ListService.getLS(listInfo);
         items =$scope.items = list.items
-        console.log(listInfo)
+        //console.log(listInfo)
         ListService.update(list).then(function(data){
-            console.log(data.items); 
+            //console.log(data.items); 
             items = $scope.items =data.items ;
             var filt = $filter('filter')(items, {done:false});
             if(filt){
@@ -230,16 +230,16 @@ stuffAppControllers.controller('ListCtrl', ['$scope', '$state', '$filter', 'List
             }
             $scope.$watch('items', function(newValue, oldValue){
                 console.log('watch is triggered');
-                console.log(items);
+                //console.log(items);
                 list.items = items;
                 list.timestamp = Date.now();
                 $scope.cnt = $filter('filter')(items, {done:false}).length;
-                console.log(JSON.stringify(newValue));
-                console.log(JSON.stringify(oldValue));
-                console.log(newValue == oldValue)
+                //console.log(JSON.stringify(newValue));
+                //console.log(JSON.stringify(oldValue));
+                //console.log(newValue == oldValue)
                 if (newValue !== oldValue) { // This prevents unneeded calls to update
                     ListService.update(list).then(function(data){
-                        console.log(data.items); 
+                        //console.log(data.items); 
                         items = $scope.items =data.items              
                     }, function(data){//on error do nothing
                     });

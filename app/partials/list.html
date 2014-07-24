@@ -1,11 +1,11 @@
 <div>
-	</br></br></br></br>
+	</br></br></br>
 	<div>
-		{{name}}
+
 		{{lid}}
-		{{listInfo}}
+<!-- 		{{listInfo}}
 		{{items}}
-		{{dog}}<br>
+		{{dog}}<br> -->
 		<span>{{cnt}} needed</span> 
 		<ul class="list unstyled" >
 			<li ng-repeat="item in items | filter:{done:false} track by $id($index)">
@@ -16,7 +16,7 @@
 		</ul> 
 		<form ng-submit="rubmit()">
 			<input ng-model="query" placeholder='search old lists'>  
-			<input type="submit" id="submit2" value="Append" /> 
+			<input type="submit" id="submit2" value="Add" /> 
 		</form>
 		gotten previously
 		<ul class="gotten unstyled" >

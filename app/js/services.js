@@ -80,7 +80,7 @@ stuffAppServices.factory( 'ListService', ['$q', '$http', 'DbService', 'UserLS', 
             list = ax[lid];
             if (! list){
                 list = {lid: lid, shops: shops, timestamp: 0, list: [] }
-                putLS(list);
+                this.putLS(list);
             };            
             return list;
         },
@@ -90,7 +90,7 @@ stuffAppServices.factory( 'ListService', ['$q', '$http', 'DbService', 'UserLS', 
             ax.listsList.push(list.lid)
             ax.listsList = _.uniq(ax.listsList)
             ax[list.lid]=list;
-            console.log(JSON.stringify(ax))
+            //console.log(JSON.stringify(ax))
             localStorage.setItem(key, JSON.stringify(ax));
             return ax;         
         },
@@ -114,7 +114,7 @@ stuffAppServices.factory( 'ListService', ['$q', '$http', 'DbService', 'UserLS', 
             var instance =this;
             lid = list.lid
             c = list;
-            console.log(c.items)
+            //console.log(c.items)
             cts = Date.now();
             p = this.getLS(list);
             pts = p.timestamp;
@@ -129,7 +129,7 @@ stuffAppServices.factory( 'ListService', ['$q', '$http', 'DbService', 'UserLS', 
                     } else {
                         updItems=c.items;
                     }
-                    console.log(JSON.stringify(updItems));
+                    //console.log(JSON.stringify(updItems));
                     s.items = updItems;
                     s.timestamp = cts;
                     instance.putLS(s);
@@ -542,7 +542,7 @@ stuffAppServices.factory('TokenService', ['$q', 'UserLS', function ($q, UserLS) 
         },
         getActiveToken: function(){
             var name = UserLS.getLastLive();
-            console.log(name)
+            //console.log(name)
             return this.getToken(name);
         },
         tokenExists: function(){
