@@ -1,4 +1,5 @@
-/* app css stylesheet */
+/* app css stylesheet  #C5B8FF;
+ */
 
 .menu {
   list-style: none;
@@ -27,4 +28,79 @@
 .menu > li:nth-child(1):before {
   content: "";
   padding: 0;
+}
+
+.list {
+  padding-left: 14px;
+  padding-right: 18px;
+}
+
+.list-group-item {
+  background-color: #C5B8FF;
+}
+.add-item {
+  background-color: #C5B8FF;
+}
+
+.container-fluid {
+  background-color: #2060ad;
+}
+
+.navbar-default .navbar-brand {
+  color: white;
+}
+
+.submit{
+  margin-left: 8px;
+  background-color: #db841a;
+  border: none;
+}
+
+.bkg-list{
+  background-color: #00A347;
+}
+.bkg-lists{
+  background-color: #db841a;
+}
+.bkg-user{
+  background-color: #cd0be2;
+}
+.bkg-shops{
+  background-color: #5bc0de;
+}
+.bkg-config{
+  background-color: #ef1a33;
+}
+.bkg-register{
+  background-color: #830044;
+}
+.bkg-admin{
+  background-color: #9AFF60;
+}
+.ck-box {
+}
+.product {
+  display:inline-block;
+   width: 140px;
+   padding-left: 8px;
+}
+.list-head {
+  display:inline-block;
+  padding-top: 70px;
+  padding-left: 12px;
+  padding-right: 10px;
+  font-size: 18px;
+}
+.got-list-head {
+  padding-left: 12px;
+}
+.list-add {
+    padding-left: 12px;
+}
+.qty {
+  display:inline-block;
+  padding-right: 10px;
+}
+.unit {
+
 }

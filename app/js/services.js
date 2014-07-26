@@ -90,7 +90,6 @@ stuffAppServices.factory( 'ListService', ['$q', '$http', 'DbService', 'UserLS', 
             ax.listsList.push(list.lid)
             ax.listsList = _.uniq(ax.listsList)
             ax[list.lid]=list;
-            //console.log(JSON.stringify(ax))
             localStorage.setItem(key, JSON.stringify(ax));
             return ax;         
         },
@@ -110,86 +109,34 @@ stuffAppServices.factory( 'ListService', ['$q', '$http', 'DbService', 'UserLS', 
         },
         update: function(list){
             console.log('in update')
-            var c, p, s, updItems, cts, pts, sts, deferred, lid;
-            var instance =this;
+            var c, p, s, updList, cts, pts, sts, deferred, lid;
             lid = list.lid
             c = list;
-            //console.log(c.items)
             cts = Date.now();
             p = this.getLS(list);
-            pts = p.timestamp;
+            console.log(p)
+            if (p){
+                pts = p.timestamp;
+            } else {
+                pts=0;
+            }
             deferred = $q.defer();
             var url=httpLoc + 'lists/'+lid; 
             $http.get(url).   
                 success(function(data, status) {
                     s = data;
                     sts = s.timestamp
-                    if (sts > pts){ //if server has been updated since prior LS
-                        updItems=instance.merge(p.items, c.items, s.items);
-                    } else {
-                        updItems=c.items;
-                    }
-                    //console.log(JSON.stringify(updItems));
-                    s.items = updItems;
-                    s.timestamp = cts;
-                    instance.putLS(s);
-                    $http.put(url, {timestamp:cts, items: updItems}).
-                        success(function(data, status) {
-                            console.log(status)
-                        }).                
-                        error(function(data, status){
-                            console.log(status)
-                        });
-
-                    deferred.resolve(s);
+                    console.log(sts)
+                    deferred.resolve(data);
                 }).
                 error(function(data, status){
                     deferred.reject(data)
                 });
-            s = deferred.promise;   
+            s = deferred.promise;  
+            console.log (s)    
+            list = updList;      
             return s;            
-        },
-         difference: function(array){
-            var prop =arguments[2];
-            var rest = Array.prototype.concat.apply(Array.prototype, Array.prototype.slice.call(arguments, 1));
-            var containsEquals = function(obj, target) {
-                if (obj == null) return false;
-                return _.any(obj, function(value) {
-                    return value[prop] === target[prop];
-                });
-            };
-            return _.filter(array, function(value){
-                return ! containsEquals(rest, value); 
-            });
-        }, 
-        union: function (arr1, arr2, prop) {
-            var sa1= JSON.stringify(arr1);
-            var arr3 = JSON.parse(sa1);
-            _.each(arr2, function(arr2obj) {
-                var arr1obj = _.find(arr1, function(arr1obj) {
-                    return arr1obj[prop] === arr2obj[prop];
-                });
-                arr1obj ? _.extend(arr3, arr2obj) : arr3.push(arr2obj);
-            });
-            return arr3
-        },    
-        merge: function(pz2,cz2,sz2){
-            // (C\(P\S))U(S\(P\C))
-            var condT = {'done': true};
-            var condF = {'done': false};
-            var p = _.filter(pz2, condF);
-            var c = _.filter(cz2, condF);
-            var s = _.filter(sz2, condF);
-            var sT = _.filter(sz2, condT);
-            var ps = this.difference(p,s, 'product');
-            var pc = this.difference(p,c, 'product' );
-            var cps = this.difference(c,ps, 'product');
-            var spc = this.difference(s,pc, 'product');
-            var arr3 = this.union(spc, cps, 'product');
-            //(MERGED{'done':false}) U (Server,{'done': true})
-            var arr4 = this.union(arr3, sT, 'product');
-            return arr4
-        }       
+        }
     }
 }]);
 
@@ -542,7 +489,7 @@ stuffAppServices.factory('TokenService', ['$q', 'UserLS', function ($q, UserLS) 
         },
         getActiveToken: function(){
             var name = UserLS.getLastLive();
-            //console.log(name)
+            console.log(name)
             return this.getToken(name);
         },
         tokenExists: function(){

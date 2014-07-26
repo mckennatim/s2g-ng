@@ -1,22 +1,28 @@
+
+<div class="bkg-lists">
+	
+
 </br></br></br></br><p>This is the partial for lists</p>
 <p>
-hey {{username}}
-{{lists}}
-<pre>
-{{default}}
-</pre>
+	hey {{username}}
+	{{lists}}
+	<pre>
+		{{default}}
+	</pre>
 </p>
 <div class='panel-body'>
-      <ul class="unstyled">
-        <li ng-repeat="list in lists">
-          <span>{{list.lid}}  {{list.shops}} </span>
-        </li>
-      </ul>
-<form name='regForm' ng-submit="submit()" >
-	<div class='form-group'>
-	<label><input type="text" name="newList" value=""></label>
+	<ul class="unstyled">
+		<li ng-repeat="list in lists">
+			<span>{{list.lid}}  {{list.shops}} </span>
+		</li>
+	</ul>
+	<form name='regForm' ng-submit="submit()" >
+		<div class='form-group'>
+			<label><input type="text" name="newList" value=""></label>
 
-	
-	</div>
-</form> 
+
+		</div>
+	</form> 
+</div>
+<div ng-include="templ" ></div>
 </div>
