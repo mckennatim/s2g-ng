@@ -214,18 +214,59 @@ stuffAppControllers.controller('ListCtrl', ['$scope', '$state', '$filter', 'List
     if (TokenService.tokenExists()){
         var lid, list, listInfo, items;
         listInfo = ListService.getDefault();//defaultLid of lastLive user 
-        if (listInfo){lid= $scope.lid = listInfo.lid;}
+        if (listInfo){
+            lid= $scope.lid = listInfo.lid;
+            $scope.shops = listInfo.shops;
+        }
         console.log(lid)
         if (! lid) {$state.go('lists');}  
-        list = $scope.list = ListService.getLS(listInfo);
+        list = ListService.getLS(listInfo);
         items =$scope.items = list.items
-        console.log(listInfo)
+        //console.log(listInfo)
         ListService.update(list).then(function(data){
-                console.log(data); 
-                list = $scope.list =data.list
-            }, function(data){
-
-            });
+            //console.log(data.items); 
+            items = $scope.items =data.items ;
+            var filt = $filter('filter')(items, {done:false});
+            if(filt){
+                $scope.cnt = $filter('filter')(items, {done:false}).length;                                                        
+            } else {
+                $scope.cnt = 0;
+            }
+            $scope.$watch('items', function(newValue, oldValue){
+                console.log('watch is triggered');
+                //console.log(items);
+                list.items = items;
+                list.timestamp = Date.now();
+                $scope.cnt = $filter('filter')(items, {done:false}).length;
+                $scope.query = '';
+                //console.log(JSON.stringify(newValue));
+                //console.log(JSON.stringify(oldValue));
+                //console.log(newValue == oldValue)
+                if (newValue !== oldValue) { // This prevents unneeded calls to update
+                    ListService.update(list).then(function(data){
+                        //console.log(data.items); 
+                        items = $scope.items =data.items              
+                    }, function(data){//on error do nothing
+                    });
+                }
+            }, true);   
+        }, function(data){
+        });
+        $scope.query='';
+        $scope.rubmit = function(){
+            if ($scope.query) {
+                console.log($scope.query)
+                $scope.items.push({product:this.query, done:false});
+                console.log($scope.items);
+                $scope.query = '';
+             }
+        };
+        $scope.remove= function(item){
+            console.log(item.product);
+            var idx = $scope.items.indexOf(item);
+            $scope.items.splice(idx,1);
+            console.log(idx);
+        };
     } else{
         UserLS.setRegState('Get token');
         $state.go('register');
