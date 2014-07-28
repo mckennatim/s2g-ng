@@ -1,19 +1,40 @@
-<div class="bkg-list">
+<div class="bkg-list col1">
 	<div>
 
-	<div>
+	<div >
 		
 		<span class="list-head">{{shops}} </span><span>{{cnt}} items needed</span> 
 		<ul class="list group" >
-			<li ng-repeat="item in items | filter:{done:false} track by $id($index)" class="list-group-item">
-				<input type="checkbox" ng-model="item.done">
-				<span class="done-{{item.done}} product">{{item.product}}</span>
-				<span class="qty" >{{item.amt.qty}}  </span>
-				<span class="unit" >{{item.amt.unit}}</span>
-				<i ng-click="remove(got)" class="pull-right glyphicon glyphicon-remove " ></i>  
-				<!-- <i class="glyphicon glyphicon-chevron-down" ></i>  --> 
+			<li ng-repeat="item in items | filter:{done:false} track by $id($index)" class="list-group-item need"
+			ng-class="{editing: item==editedItem}" >
+			<div class="view" ng-dblclick="editItem(item)">
+				<div class="ck-prod">
+					<input type="checkbox" ng-model="item.done">
+					<span class="done-{{item.done}} product">{{item.product}}</span>					
+				</div>
+				<div class="amt">
+					<span class="qty" >{{item.amt.qty}}  </span>
+					<span class="unit" >{{item.amt.unit}}</span>					
+				</div>
+				<div class="tags">
+					<span ng-repeat="tag in item.tags">{{tag}}, </span>	
+				</div>				
+				<i ng-click="remove(item)" class="delx glyphicon glyphicon-remove " ></i>  				
+			</div>
+			<div class="edit">
+				<form ng-submit="doneEditing(item)" accept-charset="utf-8">
+					<input ng-trim="false" ng-model="item.product" item-escape="revertEdit(item)" 
+						size="25" ng-blur="doneEditing(item)">
+					<input ng-trim="false" ng-model="item.amt.qty" item-escape="revertEdit(item)" size="3">
+					<input ng-trim="false" ng-model="item.amt.unit" item-escape="revertEdit(item)" size="8">
+					<input ng-trim="true" ng-model="item.tags" ng-list item-escape="revertEdit(item)" size="30">
+					<input class="submit" type="submit" id="submit2" value="Update" />
+				</form>
+			</div>
+
 			</li>
-		</ul> 	
+		</ul> 
+
 		<form class="list-add" ng-submit="rubmit()">
 			<input class="add-item" ng-model="query" placeholder='search old lists'>  
 			<input class="submit" type="submit" id="submit2" value="Add" />

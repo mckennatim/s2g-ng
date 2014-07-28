@@ -5,7 +5,8 @@
 var StuffApp = angular.module('stuffApp', [
   'ui.router',
   'stuffAppServices',
-  'stuffAppControllers'
+  'stuffAppControllers',
+  'stuffAppDirectives'
 ]).
 config(['$urlRouterProvider', '$stateProvider', function($urlRouterProvider, $stateProvider) {
   $stateProvider.state('list', {

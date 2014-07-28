@@ -213,6 +213,7 @@ stuffAppControllers.controller('ListsCtrl', ['$scope', '$state', 'TokenService',
 stuffAppControllers.controller('ListCtrl', ['$scope', '$state', '$filter', 'ListService', 'TokenService', 'UserLS', 'DbService', function ($scope, $state, $filter, ListService, TokenService, UserLS, DbService) {
     if (TokenService.tokenExists()){
         var lid, list, listInfo, items;
+        $scope.editedItem = null;
         listInfo = ListService.getDefault();//defaultLid of lastLive user 
         if (listInfo){
             lid= $scope.lid = listInfo.lid;
@@ -266,6 +267,29 @@ stuffAppControllers.controller('ListCtrl', ['$scope', '$state', '$filter', 'List
             var idx = $scope.items.indexOf(item);
             $scope.items.splice(idx,1);
             console.log(idx);
+        };
+        $scope.editItem = function(item){
+            console.log('in editItem')
+            $scope.editedItem= item;
+            console.log($scope.editedItem == item)
+            $scope.originalItem = angular.extend({}, item);
+        };
+        $scope.revertEdit = function(item){
+            console.log('escaped into revertEdit')
+            items[items.indexOf(item)] = $scope.originalItem;
+            $scope.doneEditing($scope.originalItem);           
+        };
+        $scope.doneEditing = function(item){
+            console.log('in doneEditing')
+            $scope.editedItem = null;
+            item.product = item.product.trim();
+            if(item.amt){
+                if(item.amt.qty) {item.amt.qty = item.amt.qty.trim()};
+                if(item.amt.unit) {item.amt.unit = item.amt.unit.trim()};
+            }
+            if (!item.product) {
+                $scope.remove(item);
+            } 
         };
     } else{
         UserLS.setRegState('Get token');

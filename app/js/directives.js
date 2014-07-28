@@ -3,9 +3,23 @@
 /* Directives */
 
 
-angular.module('myApp.directives', []).
-  directive('appVersion', ['version', function(version) {
+var stuffAppDirectives = angular.module('stuffAppDirectives', []);
+
+
+ stuffAppDirectives.directive('appVersion', ['version', function(version) {
     return function(scope, elm, attrs) {
       elm.text(version);
     };
   }]);
+
+ stuffAppDirectives.directive('itemEscape', function () {
+		'use strict';
+		var ESCAPE_KEY = 27;
+		return function (scope, elem, attrs) {
+			elem.bind('keydown', function (event) {
+				if (event.keyCode === ESCAPE_KEY) {
+					scope.$apply(attrs.itemEscape);
+				}
+			});
+		};
+	});
