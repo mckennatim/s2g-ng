@@ -213,17 +213,33 @@ stuffAppControllers.controller('ListsCtrl', ['$scope', '$state', 'TokenService',
 stuffAppControllers.controller('ListCtrl', ['$scope', '$state', '$filter', 'ListService', 'TokenService', 'UserLS', 'DbService', function ($scope, $state, $filter, ListService, TokenService, UserLS, DbService) {
     if (TokenService.tokenExists()){
         var lid, list, listInfo, items;
+        $scope.showAmt = false;
+        $scope.showLoc = false;
+        $scope.showTags = false;
         $scope.editedItem = null;
         listInfo = ListService.getDefault();//defaultLid of lastLive user 
         if (listInfo){
             lid= $scope.lid = listInfo.lid;
-            $scope.shops = listInfo.shops;
         }
+        var fakeshops = ["hardware", "lumber", "down Center"];
+        fakeshops.unshift(listInfo.shops)
+        $scope.shops = fakeshops;
+
+        console.log($scope.shops)
         console.log(lid)
         if (! lid) {$state.go('lists');}  
         list = ListService.getLS(listInfo);
-        items =$scope.items = list.items
-        //console.log(listInfo)
+        items =$scope.items = list.items;
+        //$scope.stores= list.stores;
+        var mkt0={"id": "0", "name": "sort-alpha"}
+        var stores=  [
+                {"id" : "s_Bereti","name" : "Stop&Shop"},
+                {"id" : "s_Bereto","name" : "WholeFoods"},
+                {"id" : "s_Bereta","name" : "TraderJoes"}
+        ]
+        stores.unshift(mkt0);
+        $scope.stores = stores;
+        console.log($scope.stores[0].name)
         ListService.update(list).then(function(data){
             //console.log(data.items); 
             items = $scope.items =data.items ;

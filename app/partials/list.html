@@ -1,34 +1,54 @@
 <div class="bkg-list col1">
 	<div>
 
-	<div >
-		
-		<span class="list-head">{{shops}} </span><span>{{cnt}} items needed</span> 
+	<div class="top-spc">
+		<span class="btn-group btn-group-xs list-btn" >
+			<span class="dropdown">
+			<button class="btn btn-default dropdown-toggle" on-toggle="toggled(open)">
+				{{shops[0]}}<span class="caret"></span>
+			</button>
+			<ul class="dropdown-menu" role="menu">
+				<li ng-repeat="shop in shops">{{shop}} </li>
+			 </ul>
+			 </span>
+			 <span class="dropdown">
+			<button class="btn btn-default dropdown-toggle" on-toggle="toggled(open)">
+				{{stores[0].name}}<span class="caret"></span>
+			</button>
+			<ul class="dropdown-menu" role="menu">	
+				<li ng-repeat="mkt in stores">{{mkt.name}} </li>
+			</ul>
+			</span>
+		</span>
+		<span>{{cnt}} items</span> 
+		<span class="btn-group btn-group-xs list-btn" >
+			<button class="btn btn-default" ng-click="showAmt=!showAmt">amt</button>
+			<button class="btn btn-default" ng-click="showLoc=!showLoc">loc</button>
+			<button class="btn btn-default" ng-click="showTags=!showTags">tags</button>
+		</span>
 		<ul class="list group" >
 			<li ng-repeat="item in items | filter:{done:false} track by $id($index)" class="list-group-item need"
 			ng-class="{editing: item==editedItem}" >
-			<div class="view" ng-dblclick="editItem(item)">
-				<div class="ck-prod">
+			<div class="view" >
 					<input type="checkbox" ng-model="item.done">
-					<span class="done-{{item.done}} product">{{item.product}}</span>					
-				</div>
-				<div class="amt">
-					<span class="qty" >{{item.amt.qty}}  </span>
-					<span class="unit" >{{item.amt.unit}}</span>					
-				</div>
-				<div class="tags">
-					<span ng-repeat="tag in item.tags">{{tag}}, </span>	
-				</div>				
-				<i ng-click="remove(item)" class="delx glyphicon glyphicon-remove " ></i>  				
+					<span class="done-{{item.done}} product" ng-click="editItem(item)" >{{item.product}}</span>	
+					<span ng-show="showAmt" >
+						<span class="amt" >{{item.amt.qty}}  </span>
+						<span class="amt" >{{item.amt.unit}}</span>
+					</span>					
+					<span ng-show="showLoc" class="loc" >{{item.loc}}</span>					
+					<span ng-show="showTags" class="tags" ng-repeat="tag in item.tags">{{tag}} </span>			
+				<i ng-click="remove(item)" class="delx glyphicon glyphicon-remove " ></i>  			
 			</div>
 			<div class="edit">
 				<form ng-submit="doneEditing(item)" accept-charset="utf-8">
 					<input ng-trim="false" ng-model="item.product" item-escape="revertEdit(item)" 
-						size="25" ng-blur="doneEditing(item)">
-					<input ng-trim="false" ng-model="item.amt.qty" item-escape="revertEdit(item)" size="3">
-					<input ng-trim="false" ng-model="item.amt.unit" item-escape="revertEdit(item)" size="8">
-					<input ng-trim="true" ng-model="item.tags" ng-list item-escape="revertEdit(item)" size="30">
-					<input class="submit" type="submit" id="submit2" value="Update" />
+						size="18" ng-blur="doneEditing(item)">
+					<input ng-trim="false" ng-model="item.amt.qty" item-escape="revertEdit(item)" size="2" >
+					<input ng-trim="false" ng-model="item.amt.unit" item-escape="revertEdit(item)" size="4">
+					<input ng-trim="false" ng-model="item.loc" item-escape="revertEdit(item)" size="8" >
+					<input ng-trim="true" ng-model="item.tags" ng-list item-escape="revertEdit(item)" size="15">
+					<input class="submit" type="submit" id="submit2" value="Upd" />
 				</form>
 			</div>
 
@@ -50,6 +70,11 @@
 		</ul>  
 	</div>
 </div> 
+<accordian>
+<accordian-group heading="hello">
+dog
+</accordian-group>
+</accordian>
 <div ng-controller="TimeCtrl">
 	<h1>stuff2get</h1>
 	<button ng-click="addUser()" >add user</button>

@@ -31,7 +31,7 @@
 }
 
 .list {
-  padding-left: 14px;
+  padding-left: 0px;
   padding-right: 18px;
 }
 
@@ -78,36 +78,37 @@
   background-color: #9AFF60;
 }
 .ck-prod {
-  float:left;
-  width:140px;
+/*  float:left;
+  width:140px;*/
 }
 .amt {
-  display:inline-block;
-  float:left;
-  width:90px; 
-/*  visibility: hidden;*/
+  padding-right: 10px;
+  font-family: Papyrus, fantasy;  }
+.loc {
+  padding-right: 8px;
+  font-family: "Arial Narrow", Arial, sans-serif;
+  font-size: 13px;
 }
 .tags {
-  display:inline-block;
-  font-size: 12px;
-  width:170px;
-  visibilty:hidden;
+  font-family: "Arial Narrow", Arial, sans-serif;
+  font-size: 11px;
 }
 .delx {
   display:inline-block;
   float: right;
 }
 .product {
-  font-weight: bold;
-  display:inline-block;
-   padding-left: 8px;
+  padding-right: 12px;
+  padding-left: 8px;
+  font-size: 16px;
+  font-family: "Comic Sans MS", "Trebuchet MS", Helvetica, sans-serif;
 }
-.list-head {
-  display:inline-block;
-  padding-top: 45px;
-  padding-left: 12px;
-  padding-right: 10px;
-  font-size: 18px;
+.top-spc {
+  padding-top: 50px;
+  padding-left:10px;
+}
+.list-btn{
+  background-color: yellow;
 }
 .got-list-head {
   padding-left: 12px;

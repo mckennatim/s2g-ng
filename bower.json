@@ -2,7 +2,9 @@
   "name": "stuff2get",
   "version": "0.0.1",
   "dependencies": {
-    "angular-hammer": ">=0.0.0"
+    "angular-hammer": ">=0.0.0",
+    "angular-bootstrap": "~0.11.0",
+    "angular-touch": "~1.2.21"
   },
   "private": true
 }
