@@ -1,0 +1,27 @@
+{
+  "default": 0,
+  "stores": [
+    "s_Bereti",
+    "s_Bereto",
+    "s_Bereta"
+  ],
+  "s_Bereti": {
+    "name": "Stop&Shop",
+    "aisles": [
+      "produce",
+      "canned",
+      "meats",
+      "baking",
+      "snacks",
+      "paper/plastic/cleaning",
+      "dairy",
+      "bread"
+    ],
+    "address": "301 Center St, Jamaica Plain, MA 02130",
+    "url": "http://stopandshop.shoplocal.com/stopandshop/default.aspx?action=entry&pretailerid=-99254&siteid=673&storeID=2598877"
+  },
+  "s_Bereto": {
+    "name": "WholeFoods",
+    "aisles": []
+  }
+}

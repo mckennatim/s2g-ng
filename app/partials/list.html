@@ -4,25 +4,19 @@
 	<div class="top-spc">
 		<span class="btn-group btn-group-xs list-btn" >
 			<span class="dropdown">
-			<button class="btn btn-default dropdown-toggle" on-toggle="toggled(open)">
-				{{shops[0]}}<span class="caret"></span>
-			</button>
-			<ul class="dropdown-menu" role="menu">
-				<li ng-repeat="shop in shops">{{shop}} </li>
-			 </ul>
-			 </span>
-			 <span class="dropdown">
-			<button class="btn btn-default dropdown-toggle" on-toggle="toggled(open)">
-				{{stores[0].name}}<span class="caret"></span>
-			</button>
-			<ul class="dropdown-menu" role="menu">	
-				<li ng-repeat="mkt in stores">{{mkt.name}} </li>
-			</ul>
+				<button class="btn btn-xs dropdown-toggle" on-toggle="toggled(open)">
+					{{shops[0]}}<span class="caret"></span>
+				</button>
+				<ul class="dropdown-menu" role="menu">
+					<li ng-repeat="shop in shops">{{shop}} </li>
+				</ul>
 			</span>
+			 <span>
+			 <select ng-model="currentStore" ng-options="store.name for store in stores" ng-click="order()"></select>
+			 </span>
 		</span>
-		<span>{{cnt}} items</span> 
+		<span>({{cnt}})</span> 
 		<span class="btn-group btn-group-xs list-btn" >
-			<button class="btn btn-default" ng-click="showAmt=!showAmt">amt</button>
 			<button class="btn btn-default" ng-click="showLoc=!showLoc">loc</button>
 			<button class="btn btn-default" ng-click="showTags=!showTags">tags</button>
 		</span>
@@ -32,7 +26,7 @@
 			<div class="view" >
 					<input type="checkbox" ng-model="item.done">
 					<span class="done-{{item.done}} product" ng-click="editItem(item)" >{{item.product}}</span>	
-					<span ng-show="showAmt" >
+					<span ng-show="item.amt.qty > 0" >
 						<span class="amt" >{{item.amt.qty}}  </span>
 						<span class="amt" >{{item.amt.unit}}</span>
 					</span>					

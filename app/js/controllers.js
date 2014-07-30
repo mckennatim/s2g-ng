@@ -213,6 +213,8 @@ stuffAppControllers.controller('ListsCtrl', ['$scope', '$state', 'TokenService',
 stuffAppControllers.controller('ListCtrl', ['$scope', '$state', '$filter', 'ListService', 'TokenService', 'UserLS', 'DbService', function ($scope, $state, $filter, ListService, TokenService, UserLS, DbService) {
     if (TokenService.tokenExists()){
         var lid, list, listInfo, items;
+        var orderBy = $filter('orderBy');
+        var filter = $filter('filter');
         $scope.showAmt = false;
         $scope.showLoc = false;
         $scope.showTags = false;
@@ -236,9 +238,70 @@ stuffAppControllers.controller('ListCtrl', ['$scope', '$state', '$filter', 'List
                 {"id" : "s_Bereti","name" : "Stop&Shop"},
                 {"id" : "s_Bereto","name" : "WholeFoods"},
                 {"id" : "s_Bereta","name" : "TraderJoes"}
-        ]
+        ];
+
         stores.unshift(mkt0);
         $scope.stores = stores;
+        $scope.currentStore=$scope.stores[0];
+        $scope.reverse = true;
+        $scope.order = function() {
+            var needed = filter($scope.items, ({done: false}));
+            var done = filter($scope.items, ({done: true}));
+            console.log($scope.currentStore.id)
+            if($scope.currentStore.id=="0"){
+                $scope.reverse = !$scope.reverse
+                console.log($scope.reverse)
+                needed = orderBy(needed, "product", $scope.reverse);
+            }else {
+                needed = orderBy(needed, $scope.aisleOrder);
+            } 
+            console.log(JSON.stringify(needed)) ;
+            console.log(JSON.stringify(done)) ;
+            items = $scope.items  = ListService.union(needed,done,'product')
+            console.log(JSON.stringify(items))    
+        };   
+        var s2g_shops=  {
+  "default": 0,
+  "stores": [
+    "s_Bereti",
+    "s_Bereto",
+    "s_Bereta"
+  ],
+  "s_Bereti": {
+    "name": "Stop&Shop",
+    "aisles": [
+      "produce",
+      "nuts",
+      "canned",
+      "meats",
+      "baking",
+      "snacks",
+      "paper/plastic",
+      "cleaning",
+      "dairy",
+      "bread"
+    ],
+    "address": "301 Center St, Jamaica Plain, MA 02130",
+    "url": "http://stopandshop.shoplocal.com/stopandshop/default.aspx?action=entry&pretailerid=-99254&siteid=673&storeID=2598877"
+  },
+  "s_Bereto": {
+    "name": "WholeFoods",
+    "aisles": []
+  }
+}
+        var aisles = s2g_shops["s_Bereti"].aisles;
+        console.log(aisles);
+        $scope.aisleOrder = function(item){
+            if(!item.loc){
+                return 0 
+            }else {
+                var ret = aisles.indexOf(item.loc);
+                //console.log(ret)
+                return ret;   
+            }  
+        };
+
+
         console.log($scope.stores[0].name)
         ListService.update(list).then(function(data){
             //console.log(data.items); 

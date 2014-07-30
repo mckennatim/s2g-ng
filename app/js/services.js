@@ -114,7 +114,7 @@ stuffAppServices.factory( 'ListService', ['$q', '$http', 'DbService', 'UserLS', 
             var instance =this;
             lid = list.lid
             c = list;
-            //console.log(c.items)
+            //console.log(JSON.stringify(c.items))
             cts = Date.now();
             p = this.getLS(list);
             pts = p.timestamp;
