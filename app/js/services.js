@@ -50,7 +50,7 @@ stuffAppServices.factory('ItemsData', function($http) {
 stuffAppServices.factory( 'ListService', ['$q', '$http', 'DbService', 'UserLS', function($q, $http, DbService, UserLS){
     var key = 's2g_lists';
     var blankLists = {listsList: []};
-    return{
+    return{    
         getDefault: function(){
             var name = UserLS.getLastLive();
             var dl= UserLS.getDefaultList();
@@ -108,9 +108,27 @@ stuffAppServices.factory( 'ListService', ['$q', '$http', 'DbService', 'UserLS', 
         getDB: function(lid){
 
         },
-        update: function(list){
+        ckIfOnline: function(){
+            $http.get(httpLoc).   
+                success(function(data, status) {
+                    if(status==200){
+                        UserLS.setServerOnline(true);
+                    }else{
+                        UserLS.setServerOnline(false);
+                    }
+                    console.log('setServerOnline to tf')                    
+                }).
+                error(function(data, status){
+                    console.log('checking if online, error')
+                    deferred.reject(data)
+                }); 
+                           
+        },
+        update: function(list){            
             console.log('in update')
             var c, p, s, updItems, cts, pts, sts, deferred, lid;
+            var serverIsOnline = UserLS.serverIsOnline();
+            console.log(serverIsOnline);
             var instance =this;
             lid = list.lid
             c = list;
@@ -119,35 +137,54 @@ stuffAppServices.factory( 'ListService', ['$q', '$http', 'DbService', 'UserLS', 
             p = this.getLS(list);
             pts = p.timestamp;
             deferred = $q.defer();
-            var url=httpLoc + 'lists/'+lid; 
-            $http.get(url).   
-                success(function(data, status) {
-                    s = data;
-                    sts = s.timestamp
-                    if (sts > pts){ //if server has been updated since prior LS
-                        updItems=instance.merge(p.items, c.items, s.items);
-                    } else {
-                        updItems=c.items;
-                    }
-                    //console.log(JSON.stringify(updItems));
-                    s.items = updItems;
-                    s.timestamp = cts;
-                    instance.putLS(s);
-                    $http.put(url, {timestamp:cts, items: updItems}).
-                        success(function(data, status) {
-                            console.log(status)
-                        }).                
-                        error(function(data, status){
-                            console.log(status)
-                        });
+            if(serverIsOnline){
+                var url=httpLoc + 'lists/'+lid; 
+                $http.get(url).   
+                    success(function(data, status) {
+                        console.log(UserLS.serverIsOnline());
+                        if(!UserLS.serverIsOnline()){
+                            console.log('no connection, just update LS');
+                            list.timestamp = cts;
+                            instance.putLS(list);
+                            deferred.resolve(list);
+                            return
+                        }
+                        console.log('connection exists')
+                        UserLS.setServerOnline(true);
+                        s = data;
+                        sts = s.timestamp
+                        if (sts > pts){ //if server has been updated since prior LS
+                            updItems=instance.merge(p.items, c.items, s.items);
+                        } else {
+                            updItems=c.items;
+                        }
+                        //console.log(JSON.stringify(updItems));
+                        s.items = updItems;
+                        s.timestamp = cts;
+                        instance.putLS(s);
+                        $http.put(url, {timestamp:cts, items: updItems}).
+                            success(function(data, status) {
+                                console.log(status)
+                            }).                
+                            error(function(data, status){
+                                console.log(status)
+                            });
 
-                    deferred.resolve(s);
-                }).
-                error(function(data, status){
-                    deferred.reject(data)
-                });
-            s = deferred.promise;   
-            return s;            
+                        deferred.resolve(s);
+                    }).
+                    error(function(data, status){
+                        deferred.reject(data)
+                    });
+                s = deferred.promise;   
+                return s;                  
+            } else{
+                console.log('no connection, just update LS');
+                list.timestamp = cts;
+                instance.putLS(list);
+                list = deferred.promise; 
+                return list
+            }
+            console.log('returned here')
         },
          difference: function(array){
             var prop =arguments[2];
@@ -214,20 +251,14 @@ stuffAppServices.factory('UserLS', function() {
     var key = 's2g_users';
     var state = 's2g_state';
     var blankUsers= {lastLive:0, regState: 'Register', regMessage: '', userList:[]};
-    // var getAll=function(){
-    //     console.log('in getAll internal')
-    //     var ret = {};
-    //     if(!localStorage.getItem(key)){
-    //             ret = blankUsers;
-    //             localStorage.setItem(key, JSON.stringify(ret));
-    //     } else {
-    //             ret=JSON.parse(localStorage.getItem(key));
-    //     }
-    //     return ret;    
-    //     console.log(getAll())
-    // }
-    // var users = getAll();
-    return {
+    var serverOnline = true;    
+    return{
+        setServerOnline: function(tf){
+            serverOnline = tf;
+        },
+        serverIsOnline: function(){
+            return serverOnline;
+        },  
         key: key,
         blankUsers: blankUsers,
         blankUser: {name: '', email: '', lists:[], role:'', timestamp: 1, apikey: ''},
@@ -447,6 +478,7 @@ stuffAppServices.factory('DbService', ['$http', '$q', 'UserLS','TokenInterceptor
 stuffAppServices.factory('TokenInterceptor', ['$q', '$injector', function ($q, $injector) {
     var UserLS=$injector.get('UserLS');
     var TokenService = $injector.get('TokenService');
+    //var ListService = $injector.get('ListService');
     var key = 's2g_tokens';
     var blankTokens= {userList:[]};
     return { 
@@ -500,6 +532,10 @@ stuffAppServices.factory('TokenInterceptor', ['$q', '$injector', function ($q, $
                 if (rejection != null && rejection.status === 401) {
                     TokenService.deleteActiveToken();
                     //$state.go('register');
+                }else{
+                    console.log('server is offline, proceed anyway')
+                    UserLS.setServerOnline(false);
+                    return true
                 }
             }
             return $q.reject(rejection);               

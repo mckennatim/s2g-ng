@@ -197,7 +197,7 @@ stuffAppControllers.controller('IsregCtrl', function ($scope, $state, UserLS, Au
         console.log($scope.numUsers);
 });
 
-stuffAppControllers.controller('ListsCtrl', ['$scope', '$state', 'TokenService', 'UserLS',  function ($scope, $state, TokenService, UserLS) {
+stuffAppControllers.controller('ListsCtrl', ['$scope', '$state', 'TokenService', 'UserLS', function ($scope, $state, TokenService, UserLS) {
     if (TokenService.tokenExists()){
         var name = UserLS.getLastLive();
         $scope.username = name;
@@ -210,7 +210,7 @@ stuffAppControllers.controller('ListsCtrl', ['$scope', '$state', 'TokenService',
     }
 }]);
 
-stuffAppControllers.controller('ListCtrl', ['$scope', '$state', '$filter', 'ListService', 'TokenService', 'UserLS', 'DbService', function ($scope, $state, $filter, ListService, TokenService, UserLS, DbService) {
+stuffAppControllers.controller('ListCtrl', ['$scope', '$state', '$filter',  '$interval', '$window', 'ListService', 'TokenService', 'UserLS', 'DbService', function ($scope, $state, $filter, $interval, $window, ListService, TokenService, UserLS, DbService) {
     if (TokenService.tokenExists()){
         var lid, list, listInfo, items;
         var orderBy = $filter('orderBy');
@@ -227,8 +227,8 @@ stuffAppControllers.controller('ListCtrl', ['$scope', '$state', '$filter', 'List
         fakeshops.unshift(listInfo.shops)
         $scope.shops = fakeshops;
 
-        console.log($scope.shops)
-        console.log(lid)
+        //console.log($scope.shops)
+        //console.log(lid)
         if (! lid) {$state.go('lists');}  
         list = ListService.getLS(listInfo);
         items =$scope.items = list.items;
@@ -272,12 +272,16 @@ stuffAppControllers.controller('ListCtrl', ['$scope', '$state', '$filter', 'List
     "aisles": [
       "produce",
       "nuts",
+      "seafood",
+      "cookies",
+      "cereal",
       "canned",
       "meats",
       "baking",
       "snacks",
       "paper/plastic",
       "cleaning",
+      "frozen",
       "dairy",
       "bread"
     ],
@@ -290,7 +294,7 @@ stuffAppControllers.controller('ListCtrl', ['$scope', '$state', '$filter', 'List
   }
 }
         var aisles = s2g_shops["s_Bereti"].aisles;
-        console.log(aisles);
+        //console.log(aisles);
         $scope.aisleOrder = function(item){
             if(!item.loc){
                 return 0 
@@ -302,7 +306,7 @@ stuffAppControllers.controller('ListCtrl', ['$scope', '$state', '$filter', 'List
         };
 
 
-        console.log($scope.stores[0].name)
+        //console.log($scope.stores[0].name)
         ListService.update(list).then(function(data){
             //console.log(data.items); 
             items = $scope.items =data.items ;
@@ -318,20 +322,60 @@ stuffAppControllers.controller('ListCtrl', ['$scope', '$state', '$filter', 'List
                 list.items = items;
                 list.timestamp = Date.now();
                 $scope.cnt = $filter('filter')(items, {done:false}).length;
+                $scope.online=UserLS.serverIsOnline();
                 $scope.query = '';
                 //console.log(JSON.stringify(newValue));
                 //console.log(JSON.stringify(oldValue));
                 //console.log(newValue == oldValue)
                 if (newValue !== oldValue) { // This prevents unneeded calls to update
                     ListService.update(list).then(function(data){
-                        //console.log(data.items); 
+                        console.log(data.items); 
                         items = $scope.items =data.items              
-                    }, function(data){//on error do nothing
+                    }, function(data){//
+                        console.log('on error do nothing')
                     });
                 }
             }, true);   
         }, function(data){
         });
+        $scope.update=function(){
+            console.log('in scope update')
+            ListService.update(list).then(function(data){
+                items = $scope.items =data.items              
+            }, function(data){//
+                console.log('on error do nothing')
+            });            
+        };
+        // var running = $interval(function(){
+        //     $scope.update();
+        // },5000);
+        var destroyed = false;
+        var running;
+        var runUpd = function(){
+            running = $interval(function(){
+                $scope.update();
+            },5000);
+        };
+        var cancelRunning = function() {
+            if (running) {$interval.cancel(running);}
+        };        
+        runUpd();
+        $scope.$on("$destroy", function() {
+            console.log('destroyed')
+            destroyed = true;
+            cancelRunning();
+        });
+        angular.element($window).bind('blur', function () {
+            cancelRunning();
+        })        
+        angular.element($window).bind('focus', function () {
+            if (!destroyed){runUpd();}
+        })
+
+        // $q.defer(function doUpd(){
+        //     $scope.update();
+        //     $q.defer(doUpd,5000)
+        // },5000);
         $scope.query='';
         $scope.rubmit = function(){
             if ($scope.query) {

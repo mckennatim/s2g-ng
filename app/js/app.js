@@ -52,5 +52,9 @@ config(['$urlRouterProvider', '$stateProvider', function($urlRouterProvider, $st
 
 StuffApp.config(function ($httpProvider) {
     $httpProvider.interceptors.push('TokenInterceptor');
-    //console.log($httpProvider.interceptors);
+    console.log($httpProvider.interceptors);
 });
+StuffApp.run(function(ListService){
+  console.log('this is running')
+  ListService.ckIfOnline();
+})

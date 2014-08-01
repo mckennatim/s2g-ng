@@ -20,6 +20,8 @@
 			<button class="btn btn-default" ng-click="showLoc=!showLoc">loc</button>
 			<button class="btn btn-default" ng-click="showTags=!showTags">tags</button>
 		</span>
+		<span>online:{{online}}</span>
+		<button class="btn btn-xs" ng-click="update()">refresh</button>
 		<ul class="list group" >
 			<li ng-repeat="item in items | filter:{done:false} track by $id($index)" class="list-group-item need"
 			ng-class="{editing: item==editedItem}" >
