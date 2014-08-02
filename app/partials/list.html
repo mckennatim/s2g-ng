@@ -20,13 +20,13 @@
 			<button class="btn btn-default" ng-click="showLoc=!showLoc">loc</button>
 			<button class="btn btn-default" ng-click="showTags=!showTags">tags</button>
 		</span>
-		<span>online:{{online}}</span>
-		<button class="btn btn-xs" ng-click="update()">refresh</button>
+		<span class="glyphicon glyphicon-signal" ng-show="online"></span>
+		<span class="glyphicon glyphicon-ban-circle" ng-show="!online"></span>
 		<ul class="list group" >
 			<li ng-repeat="item in items | filter:{done:false} track by $id($index)" class="list-group-item need"
 			ng-class="{editing: item==editedItem}" >
 			<div class="view" >
-					<input type="checkbox" ng-model="item.done">
+					<input type="checkbox" ng-model="item.done" ng-click="item.amt.qty=''">
 					<span class="done-{{item.done}} product" ng-click="editItem(item)" >{{item.product}}</span>	
 					<span ng-show="item.amt.qty > 0" >
 						<span class="amt" >{{item.amt.qty}}  </span>
@@ -39,15 +39,14 @@
 			<div class="edit">
 				<form ng-submit="doneEditing(item)" accept-charset="utf-8">
 					<input ng-trim="false" ng-model="item.product" item-escape="revertEdit(item)" 
-						size="18" ng-blur="doneEditing(item)">
-					<input ng-trim="false" ng-model="item.amt.qty" item-escape="revertEdit(item)" size="2" >
-					<input ng-trim="false" ng-model="item.amt.unit" item-escape="revertEdit(item)" size="4">
-					<input ng-trim="false" ng-model="item.loc" item-escape="revertEdit(item)" size="8" >
-					<input ng-trim="true" ng-model="item.tags" ng-list item-escape="revertEdit(item)" size="15">
+						size="18" ng-blur="doneEditing(item)" placeholder="product" >
+					<input ng-trim="false" ng-model="item.amt.qty" item-escape="revertEdit(item)" size="2" placeholder="qty" >
+					<input ng-trim="false" ng-model="item.amt.unit" item-escape="revertEdit(item)" size="4" placeholder="unit" >
+					<input ng-trim="false" ng-model="item.loc" item-escape="revertEdit(item)" size="8"  placeholder="aisle" >
+					<input ng-trim="true" ng-model="item.tags" ng-list item-escape="revertEdit(item)" size="15" placeholder="tags" >
 					<input class="submit" type="submit" id="submit2" value="Upd" />
 				</form>
 			</div>
-
 			</li>
 		</ul> 
 

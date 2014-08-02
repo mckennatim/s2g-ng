@@ -186,6 +186,46 @@ stuffAppServices.factory( 'ListService', ['$q', '$http', 'DbService', 'UserLS', 
             }
             console.log('returned here')
         },
+        poll: function(list){            
+            console.log('in poll')
+            var p, s, updItems, pts, sts, deferred, lid;
+            var serverIsOnline = UserLS.serverIsOnline();
+            console.log(serverIsOnline);
+            var instance =this;
+            p = this.getLS(list);
+            pts = p.timestamp;
+            //deferred = $q.defer();
+            if(serverIsOnline){
+                var url=httpLoc + 'lists/'+lid; 
+                $http.get(url).   
+                    success(function(data, status) {
+                        console.log(UserLS.serverIsOnline());
+                        if(!UserLS.serverIsOnline()){
+                            console.log('no connection, should have known');
+                            return
+                        }
+                        //console.log('connection exists')
+                        UserLS.setServerOnline(true);
+                        s = data;
+                        sts = s.timestamp
+                        if (sts > pts){ //if server has been updated since prior LS
+                            console.log('server has been updated')
+                            updItems=instance.mergeps(p.items, s.items);
+                            p.items = updItems;
+                            p.timestamp = pts;
+                            instance.putLS(p)
+                        } 
+                        //deferred.resolve(p);
+                    }).
+                    error(function(data, status){
+                        //deferred.reject(data)
+                    });
+                //p = deferred.promise;   
+                //return p;                  
+            } else{
+                console.log('no connection, should have noticed');
+            }
+        },        
          difference: function(array){
             var prop =arguments[2];
             var rest = Array.prototype.concat.apply(Array.prototype, Array.prototype.slice.call(arguments, 1));
@@ -226,7 +266,18 @@ stuffAppServices.factory( 'ListService', ['$q', '$http', 'DbService', 'UserLS', 
             //(MERGED{'done':false}) U (Server,{'done': true})
             var arr4 = this.union(arr3, sT, 'product');
             return arr4
-        }       
+        },
+        mergeps: function(pz2,sz2){
+            var condT = {'done': true};
+            var condF = {'done': false};
+            var p = _.filter(pz2, condF);
+            var s = _.filter(sz2, condF);
+            var sT = _.filter(sz2, condT);
+            var ps = this.union(p, s, 'product');
+            var arr4 = this.union(ps, sT, 'product');
+            console.log(JSON.stringify(arr4));
+            return arr4
+        }                  
     }
 }]);
 

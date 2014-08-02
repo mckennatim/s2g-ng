@@ -346,15 +346,23 @@ stuffAppControllers.controller('ListCtrl', ['$scope', '$state', '$filter',  '$in
                 console.log('on error do nothing')
             });            
         };
-        // var running = $interval(function(){
-        //     $scope.update();
-        // },5000);
+        $scope.poll=function(){
+            console.log('in scope poll')
+            ListService.poll(list)
+            list = ListService.getLS(listInfo);
+            items =$scope.items = list.items;
+        };        
         var destroyed = false;
         var running;
         var runUpd = function(){
             running = $interval(function(){
-                $scope.update();
-            },5000);
+                ListService.ckIfOnline();
+                $scope.online = UserLS.serverIsOnline();
+                console.log($scope.online);
+                if(UserLS.serverIsOnline()){
+                    $scope.poll();
+                }
+            },5000);                        
         };
         var cancelRunning = function() {
             if (running) {$interval.cancel(running);}
@@ -371,11 +379,6 @@ stuffAppControllers.controller('ListCtrl', ['$scope', '$state', '$filter',  '$in
         angular.element($window).bind('focus', function () {
             if (!destroyed){runUpd();}
         })
-
-        // $q.defer(function doUpd(){
-        //     $scope.update();
-        //     $q.defer(doUpd,5000)
-        // },5000);
         $scope.query='';
         $scope.rubmit = function(){
             if ($scope.query) {
@@ -393,6 +396,7 @@ stuffAppControllers.controller('ListCtrl', ['$scope', '$state', '$filter',  '$in
         };
         $scope.editItem = function(item){
             console.log('in editItem')
+            cancelRunning();
             $scope.editedItem= item;
             console.log($scope.editedItem == item)
             $scope.originalItem = angular.extend({}, item);
@@ -413,6 +417,7 @@ stuffAppControllers.controller('ListCtrl', ['$scope', '$state', '$filter',  '$in
             if (!item.product) {
                 $scope.remove(item);
             } 
+            runUpd();
         };
     } else{
         UserLS.setRegState('Get token');
