@@ -35,7 +35,7 @@
   padding-right: 12px;
 }
 
-.list-group-item {
+.need {
   background-color: #C5B8FF;
 }
 .add-item {
@@ -139,7 +139,17 @@ li.editing .edit {
 /*.list-group-item:last-child{
   padding-bottom:30px;
 }*/
-
+.lists {
+  color:white;
+  background-image: linear-gradient(0deg, #4474A6, #6DA9D2);
+  border:1px solid #aaa;
+}
+.list-name {
+  font-size: 24px;
+}
+.list-lid{
+  font-size: 12px;
+}
 
 @media all and (min-width: 42em){
   .col1 { float: left; width:50%; }

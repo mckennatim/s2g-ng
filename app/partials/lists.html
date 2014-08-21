@@ -1,27 +1,25 @@
 
-<div class="bkg-lists">
+<div class="bkg-lists col1" ng-click="update()">
 	
 
-</br></br></br></br><p>This is the partial for lists</p>
+</br></br></br>
 <p>
-	hey {{username}}
-	{{lists}}
-	<pre>
-		{{default}}
-	</pre>
+	Hey {{username}} {{message}}
 </p>
-<div class='panel-body'>
-	<ul class="unstyled">
-		<li ng-repeat="list in lists">
-			<span>{{list.lid}}  {{list.shops}} </span>
+<div>
+	<ul class="list-group">
+		<li ng-repeat="list in lists track by $index" class="list-group-item lists" > 
+				<span ng-click="goList($index)" class="list-name">{{list.shops}}</span><br>
+				<i ng-click="remove(list)" class="delx glyphicon glyphicon-remove " ></i> 			 
+				<span ng-click="goList($index)" class="list-lid" >repository:{{list.lid}}   </span>			
 		</li>
 	</ul>
-	<form name='regForm' ng-submit="submit()" >
+	<form name='regForm' >
 		<div class='form-group'>
-			<label><input type="text" name="newList" value=""></label>
-
-
-		</div>
+			<label><input type="text" name="newList" placeholder="add-list/join-repo" ng-model="shops"></label>
+			<a class="label bkg-register" ng-click="submit()">Add</a>
+			<a class="label bkg-user" ng-click="join()">Join</a>
+ 		</div>
 	</form> 
 </div>
 <div ng-include="templ" ></div>

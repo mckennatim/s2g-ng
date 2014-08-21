@@ -1,4 +1,4 @@
-<div class="bkg-admin">
+<div class="bkg-admin col1" >
 </br></br></br></br><p>Hey {{dog}}, this is the partial for admin.html </p>
 
 <div class="input-group panel panel-default">
@@ -27,6 +27,19 @@
   <button id="btn_admin_listallT" class="btn btn-primary" ng-click="listAllT()">list all</button>
   </div>
   <div class="output">{{usernameT}}: {{outputT}}</div>
+</form> 
+<form name='AdminForm3'>
+  <div class='form-group'>
+    <label>localStorage -s2g_lists</label>{{isUserT}}  
+    <input type="text" class="form-control" ng-model='userL' name='nameInpL'>
+  </div>
+  <div class="input-group-btn">
+  <button id= "btn_admin_findL" class="btn btn-primary" ng-click="findL()">find</button>
+  <button id="btn_admin_delL" class="btn btn-primary" ng-click="delL()">del</button>
+  <button id="btn_admin_listallL" class="btn btn-primary" ng-click="listAllL()">list all</button>
+  </div>
+  <div class="output">{{userL}}: {{outputL}}</div>    
+
 </form> 
 </div>
 </div>

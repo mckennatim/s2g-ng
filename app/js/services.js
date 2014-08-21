@@ -47,7 +47,8 @@ stuffAppServices.factory('ItemsData', function($http) {
     };
 });
 
-stuffAppServices.factory( 'ListService', ['$q', '$http', 'DbService', 'UserLS', function($q, $http, DbService, UserLS){
+
+stuffAppServices.factory( 'ListService', ['$q', '$http', '$log', 'DbService', 'UserLS', function($q, $http, $log, DbService, UserLS){
     var key = 's2g_lists';
     var blankLists = {listsList: []};
     return{    
@@ -73,13 +74,14 @@ stuffAppServices.factory( 'ListService', ['$q', '$http', 'DbService', 'UserLS', 
         },
         getLS:  function(listInfo){
             console.log('in getLS')
+            console.log(listInfo)
             var ax, lid, shops, list;
             ax = this.getAll();
             lid = listInfo.lid;
             shops = listInfo.shops;
             list = ax[lid];
             if (! list){
-                list = {lid: lid, shops: shops, timestamp: 0, list: [] }
+                list = {lid: lid, shops: shops, timestamp: 0, items: [] }
                 this.putLS(list);
             };            
             return list;
@@ -153,9 +155,14 @@ stuffAppServices.factory( 'ListService', ['$q', '$http', 'DbService', 'UserLS', 
                         UserLS.setServerOnline(true);
                         s = data;
                         sts = s.timestamp
+                        console.log(sts)
+                        console.log(pts)
+                        console.log(sts-pts)
                         if (sts > pts){ //if server has been updated since prior LS
+                            console.log('merging')
                             updItems=instance.merge(p.items, c.items, s.items);
                         } else {
+                            console.log('just sending c ')
                             updItems=c.items;
                         }
                         //console.log(JSON.stringify(updItems));
@@ -186,6 +193,54 @@ stuffAppServices.factory( 'ListService', ['$q', '$http', 'DbService', 'UserLS', 
             }
             console.log('returned here')
         },
+        addList: function(shops){
+            var s;
+            var url=httpLoc + 'lists/' + shops ;
+            var deferred = $q.defer();
+            $http.post(url).
+                success(function(data,status){
+                    s=data
+                    deferred.resolve(data)
+                }).
+                error(function(data,status){
+                    s= data
+                    deferred.reject(data)
+                });
+                s=deferred.promise;
+                return s;
+        },
+        delList: function(lid){
+            var s;
+            var url=httpLoc + 'lists/' + lid ;
+            var deferred = $q.defer();
+            $http.delete(url).
+                success(function(data,status){
+                    s=data
+                    deferred.resolve(data)
+                }).
+                error(function(data,status){
+                    s= data
+                    deferred.reject(data)
+                });
+                s=deferred.promise;
+                return s;
+        },
+        joinList: function(lid){
+            var s;
+            var url=httpLoc + 'user/'+lid;      
+            var deferred = $q.defer();     
+            $http.put(url).
+                success(function(data,status){
+                    s=data
+                    deferred.resolve(data)
+                }).
+                error(function(data,status){
+                    s= data
+                    deferred.reject(data)
+                });
+                s=deferred.promise;
+                return s;
+        },
         poll: function(list){            
             console.log('in poll')
             var p, s, updItems, pts, sts, deferred, lid;
@@ -194,6 +249,7 @@ stuffAppServices.factory( 'ListService', ['$q', '$http', 'DbService', 'UserLS', 
             var instance =this;
             p = this.getLS(list);
             pts = p.timestamp;
+            lid=list.lid
             //deferred = $q.defer();
             if(serverIsOnline){
                 var url=httpLoc + 'lists/'+lid; 
@@ -207,10 +263,12 @@ stuffAppServices.factory( 'ListService', ['$q', '$http', 'DbService', 'UserLS', 
                         //console.log('connection exists')
                         UserLS.setServerOnline(true);
                         s = data;
-                        sts = s.timestamp
+                        sts = s.timestamp;
+                        console.log(s.lists);
+                        console.log(pts);
                         if (sts > pts){ //if server has been updated since prior LS
                             console.log('server has been updated')
-                            updItems=instance.mergeps(p.items, s.items);
+                            updItems=instance.mergeps(s.items, p.items);
                             p.items = updItems;
                             p.timestamp = pts;
                             instance.putLS(p)
@@ -359,6 +417,21 @@ stuffAppServices.factory('UserLS', function() {
             //console.log(usr);
             return ret;
         },
+        setDefaultList: function(idx){
+            var al = this.getAll();
+            al[al.userList[al.lastLive]].defaultList= idx
+            localStorage.setItem(this.key, JSON.stringify(al));
+        },
+        pushList: function(list){
+            var al = this.getAll();
+            al[al.userList[al.lastLive]].lists.push(list)
+            localStorage.setItem(this.key, JSON.stringify(al));
+        },
+        updLists: function(lists){
+            var al = this.getAll();
+            al[al.userList[al.lastLive]].lists=lists
+            localStorage.setItem(this.key, JSON.stringify(al));
+        },
         setRegState: function(st){
             var ret = this.getAll();
             ret.regState = st;
@@ -495,8 +568,10 @@ stuffAppServices.factory('DbService', ['$http', '$q', 'UserLS','TokenInterceptor
             var deferred = $q.defer();
             $http.get(url, {withCredentials:true}).   
                 success(function(data, status) {
-                    console.log(data);
-                    UserLS.postUser(data, 'Authenticated');
+                    if(data != undefined){
+                        console.log(data)
+                        UserLS.postUser(data, 'Authenticated');                      
+                    };
                     console.log(status);
                     deferred.resolve(data);
                 }).
@@ -523,7 +598,7 @@ stuffAppServices.factory('DbService', ['$http', '$q', 'UserLS','TokenInterceptor
                     deferred.reject(data)
                 });
             return deferred.promise;
-        } 
+        }
     }
 }]);
 stuffAppServices.factory('TokenInterceptor', ['$q', '$injector', function ($q, $injector) {

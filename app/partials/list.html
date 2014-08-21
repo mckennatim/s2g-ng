@@ -1,4 +1,4 @@
-<div class="bkg-list col1">
+<div class="bkg-list col1" ng-click="update()">
 	<div>
 
 	<div class="top-spc">
@@ -8,7 +8,7 @@
 					{{shops[0]}}<span class="caret"></span>
 				</button>
 				<ul class="dropdown-menu" role="menu">
-					<li ng-repeat="shop in shops">{{shop}} </li>
+					<li ng-repeat="shop in shops track by $index">{{shop}} </li>
 				</ul>
 			</span>
 			 <span>
@@ -19,11 +19,12 @@
 		<span class="btn-group btn-group-xs list-btn" >
 			<button class="btn btn-default" ng-click="showLoc=!showLoc">loc</button>
 			<button class="btn btn-default" ng-click="showTags=!showTags">tags</button>
+			<button class="btn btn-default glyphicon glyphicon-refresh" ng-click="update()" class=""></button>
 		</span>
 		<span class="glyphicon glyphicon-signal" ng-show="online"></span>
 		<span class="glyphicon glyphicon-ban-circle" ng-show="!online"></span>
 		<ul class="list group" >
-			<li ng-repeat="item in items | filter:{done:false} track by $id($index)" class="list-group-item need"
+			<li ng-repeat="item in items | filter:{done:false} track by $index" class="list-group-item need"
 			ng-class="{editing: item==editedItem}" >
 			<div class="view" >
 					<input type="checkbox" ng-model="item.done" ng-click="item.amt.qty=''">
@@ -56,7 +57,7 @@
 		</form>
 		<span class="got-list-head">from old lists</span> 
 		<ul class="list group" >
-			<li ng-repeat="got in items | filter:{done:true} | filter:query track by $id($index)" class="list-group-item">
+			<li ng-repeat="got in items | filter:{done:true} | filter:query track by $id($index)" class="list-group-item need">
 				<input class="ck-box" type="checkbox" ng-model="got.done">
 				<span class="done-{{got.done}} product">{{got.product}}</span>
 				<i ng-click="remove(got)" class="pull-right glyphicon glyphicon-remove " ></i>  
@@ -67,7 +68,7 @@
 </div> 
 <accordian>
 <accordian-group heading="hello">
-dog
+{{timestamp | date:'medium'}}
 </accordian-group>
 </accordian>
 <div ng-controller="TimeCtrl">
