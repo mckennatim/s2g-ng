@@ -111,20 +111,30 @@ stuffAppServices.factory( 'ListService', ['$q', '$http', '$log', 'DbService', 'U
 
         },
         ckIfOnline: function(){
+            var s;
+            var deferred = $q.defer();
             $http.get(httpLoc).   
                 success(function(data, status) {
                     if(status==200){
                         UserLS.setServerOnline(true);
+                        s=data
+                        deferred.resolve(data)
                     }else{
                         UserLS.setServerOnline(false);
+                        s= data
+                        deferred.reject(data)                        
                     }
-                    console.log('setServerOnline to tf')                    
+                    console.log('setServerOnline to tf') 
+                    s=deferred.promise;
+                    return s;                      
                 }).
                 error(function(data, status){
                     console.log('checking if online, error')
+                    s=data
                     deferred.reject(data)
                 }); 
-                           
+                s=deferred.promise;
+                return s;                          
         },
         update: function(list){            
             console.log('in update')
@@ -432,6 +442,15 @@ stuffAppServices.factory('UserLS', function() {
             al[al.userList[al.lastLive]].lists=lists
             localStorage.setItem(this.key, JSON.stringify(al));
         },
+        updList: function(list){
+            var al = this.getAll();
+            var lid = list.lid;
+            var oldRem = al[al.userList[al.lastLive]].lists.filter(function(e){return e.lid !==list.lid});
+            oldRem.push(list)
+            al[al.userList[al.lastLive]].lists=oldRem;
+            localStorage.setItem(this.key, JSON.stringify(al));
+            return oldRem;
+        },
         setRegState: function(st){
             var ret = this.getAll();
             ret.regState = st;
@@ -567,6 +586,26 @@ stuffAppServices.factory('DbService', ['$http', '$q', 'UserLS','TokenInterceptor
             var url=httpLoc + 'users/'+uname;      
             var deferred = $q.defer();
             $http.get(url, {withCredentials:true}).   
+                success(function(data, status) {
+                    if(data != undefined){
+                        console.log(data)
+                        UserLS.postUser(data, 'Authenticated');                      
+                    };
+                    console.log(status);
+                    deferred.resolve(data);
+                }).
+                error(function(data, status){
+                    console.log(data || "Request failed");
+                    console.log(status);
+                    deferred.reject({message: 'server is down'})
+                });
+            return deferred.promise;
+        },
+        putUser: function(stuff){
+            var uname = UserLS.getLastLive()
+            var url=httpLoc + 'users/'+uname;    
+            var deferred = $q.defer();
+            $http.put(url, stuff ).   
                 success(function(data, status) {
                     if(data != undefined){
                         console.log(data)

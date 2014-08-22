@@ -8,8 +8,16 @@
 </p>
 <div>
 	<ul class="list-group">
-		<li ng-repeat="list in lists track by $index" class="list-group-item lists" > 
-				<span ng-click="goList($index)" class="list-name">{{list.shops}}</span><br>
+		<li ng-repeat="list in lists track by $index" class="list-group-item lists" ng-class="{editing: list==editedList}" > 
+				<i ng-click="edit(list)" class="delx glyphicon glyphicon-pencil " ></i> 
+				<span class="view">
+					<span ng-click="goList($index)" class="list-name">{{list.shops}}</span><br>
+				</span>			 
+				<span class="edit">
+					<form ng-submit="doneEditing(list)" accept-charset="utf-8">
+						<input ng-trim="false" ng-model="list.shops" item-escape="revertEdit(list)" size="18"  ></span>
+					</form>	
+				</span>  		
 				<i ng-click="remove(list)" class="delx glyphicon glyphicon-remove " ></i> 			 
 				<span ng-click="goList($index)" class="list-lid" >repository:{{list.lid}}   </span>			
 		</li>

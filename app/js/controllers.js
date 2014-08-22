@@ -236,13 +236,36 @@ stuffAppControllers.controller('ListsCtrl', ['$scope', '$state', 'TokenService',
         };
         $scope.remove = function(list){
             console.log(list)
+            alert('Are you sure you want to resign from this list?')
             ListService.delList(list.lid).then(function(data){
                 console.log(data);
                 DbService.updateUser().then(function(){
                     $scope.lists= UserLS.getLists();
+                    $scope.originalItem = angular.extend({}, list);
                 });
             })
         };
+        $scope.edit =function(list){
+            $scope.editedList=list;
+            $scope.originalItem = angular.extend({}, list);
+            if(!UserLS.serverIsOnline()){
+                $scope.message=', either you or server are offline, update later';
+                $scope.revertEdit(list);
+            }
+        };
+        $scope.revertEdit = function(list){
+            console.log('escaped into revertEdit')
+            $scope.lists[$scope.lists.indexOf(list)] = $scope.originalItem;
+            $scope.doneEditing($scope.originalItem);           
+        };
+        $scope.doneEditing = function(list){
+            console.log('in doneEditing')
+            $scope.editedList = null;
+            list.shops = list.shops.trim();
+            var lists = UserLS.updList(list);
+            var stuff = {$set: {lists: lists}};
+            DbService.putUser(stuff);
+        };        
         $scope.join = function(){
              if ($scope.shops) {
                 console.log($scope.shops)

@@ -127,6 +127,9 @@
 li.need .edit {
   display:none;
 }
+li.lists .edit{
+  display:none;
+}
 li.editing {
   background-color: white
 } 
@@ -134,6 +137,7 @@ li.editing .view{
   display:none;
 }
 li.editing .edit {
+  color:blue;
   display:inline-block;
 }
 /*.list-group-item:last-child{
