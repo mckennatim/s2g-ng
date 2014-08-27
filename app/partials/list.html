@@ -3,16 +3,10 @@
 
 	<div class="top-spc">
 		<span class="btn-group btn-group-xs list-btn" >
-			<span class="dropdown">
-				<button class="btn btn-xs dropdown-toggle" on-toggle="toggled(open)">
-					{{shops[0]}}<span class="caret"></span>
-				</button>
-				<ul class="dropdown-menu" role="menu">
-					<li ng-repeat="shop in shops track by $index">{{shop}} </li>
-				</ul>
-			</span>
+			<span>
+			 	<select ng-model="currentShop" ng-options="shop.shops for shop in shops" ng-click="switch(currentShop)"></select></span>
 			 <span>
-			 <select ng-model="currentStore" ng-options="store.name for store in stores" ng-click="order()"></select>
+			 	<select ng-model="currentStore" ng-options="store.name for store in stores" ng-click="order()"></select>
 			 </span>
 		</span>
 		<span>({{cnt}})</span> 

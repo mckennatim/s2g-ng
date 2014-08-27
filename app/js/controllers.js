@@ -54,7 +54,7 @@ stuffAppControllers.controller('InpCtrl', function ($scope, ItemsData, $filter) 
     // };
 });
 
-stuffAppControllers.controller('RegisterCtrl', ['$scope', '$http', 'AuthService', 'UserLS',  'TokenService', 'DbService', function ($scope, $http, AuthService, UserLS, TokenService, DbService) {
+stuffAppControllers.controller('RegisterCtrl', ['$scope', '$http', 'AuthService', 'UserLS',  'TokenService', 'DbService', 'ListService', '$rootScope', function ($scope, $http, AuthService, UserLS, TokenService, DbService, ListService, $rootScope) {
     if (TokenService.tokenExists()){
         var message = 'all set you are authorized and have token';
         $scope.state = UserLS.setRegState('Authenticated');
@@ -79,6 +79,14 @@ stuffAppControllers.controller('RegisterCtrl', ['$scope', '$http', 'AuthService'
     $scope.isuUser='';
     $scope.isMatch='';
     console.log('in register control')
+    console.log(UserLS.serverIsOnline())
+    $scope.$watch('$rootScope.online', function(newValue, oldValue){
+        console.log('watchin')
+        if (newValue ==false){
+            $scope.message = 'server or you are offline, try later';
+            console.log('server or you are offline, try later')
+        }
+    })
     $scope.submit = function(){
         $scope.user.name = $scope.username
         $scope.user.email = $scope.email
@@ -293,15 +301,11 @@ stuffAppControllers.controller('ListCtrl', ['$scope', '$state', '$filter',  '$in
         $scope.showLoc = false;
         $scope.showTags = false;
         $scope.editedItem = null;
-        listInfo = ListService.getDefault();//defaultLid of lastLive user 
-        if (listInfo){
-            lid= listInfo.lid;
-            var fakeshops = ["hardware", "lumber", "down Center"];
-            fakeshops.unshift(listInfo.shops)
-            $scope.shops = fakeshops;
-        }
-        console.log(listInfo)
-        //console.log(lid)
+        $scope.listIdx= UserLS.getDefaultListIdx();
+        $scope.shops= UserLS.getLists();
+        console.log($scope.shops[$scope.listIdx]);
+        listInfo= $scope.currentShop = $scope.shops[$scope.listIdx];
+        lid= listInfo.lid;
         if (! lid) {
             console.log('heading to lists')
             $state.go('lists');
@@ -498,6 +502,15 @@ stuffAppControllers.controller('ListCtrl', ['$scope', '$state', '$filter',  '$in
                 } 
                 runUpd();
             };
+            $scope.switch=function(shop){
+                var idx = $scope.shops.map(function(e){return e.lid}).indexOf(shop.lid);
+                UserLS.setDefaultList(idx);
+                console.log(shop)
+                list = ListService.getLS(shop);
+                $scope.items = list.items;
+                console.log(JSON.stringify($scope.items))
+                console.log(idx);
+            }
         };
     } else{
         UserLS.setRegState('Get token');

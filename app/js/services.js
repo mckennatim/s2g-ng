@@ -48,7 +48,7 @@ stuffAppServices.factory('ItemsData', function($http) {
 });
 
 
-stuffAppServices.factory( 'ListService', ['$q', '$http', '$log', 'DbService', 'UserLS', function($q, $http, $log, DbService, UserLS){
+stuffAppServices.factory( 'ListService', ['$q', '$http', '$log', 'DbService', 'UserLS', '$rootScope', function($q, $http, $log, DbService, UserLS, $rootScope){
     var key = 's2g_lists';
     var blankLists = {listsList: []};
     return{    
@@ -116,10 +116,12 @@ stuffAppServices.factory( 'ListService', ['$q', '$http', '$log', 'DbService', 'U
             $http.get(httpLoc).   
                 success(function(data, status) {
                     if(status==200){
+                        $rootScope.online=true;
                         UserLS.setServerOnline(true);
                         s=data
                         deferred.resolve(data)
                     }else{
+                        $rootScope.online=false;
                         UserLS.setServerOnline(false);
                         s= data
                         deferred.reject(data)                        
@@ -129,7 +131,10 @@ stuffAppServices.factory( 'ListService', ['$q', '$http', '$log', 'DbService', 'U
                     return s;                      
                 }).
                 error(function(data, status){
+                    $rootScope.online=false;
+                    UserLS.setServerOnline(false);
                     console.log('checking if online, error')
+                    console.log(UserLS.serverIsOnline())
                     s=data
                     deferred.reject(data)
                 }); 
@@ -372,8 +377,10 @@ stuffAppServices.factory('UserLS', function() {
     var blankUsers= {lastLive:0, regState: 'Register', regMessage: '', userList:[]};
     var serverOnline = true;    
     return{
+        serverOnline: serverOnline,
         setServerOnline: function(tf){
             serverOnline = tf;
+            console.log('serverIsOnline: '+serverOnline)
         },
         serverIsOnline: function(){
             return serverOnline;
@@ -426,6 +433,10 @@ stuffAppServices.factory('UserLS', function() {
             var ret = lists[def];
             //console.log(usr);
             return ret;
+        },
+        getDefaultListIdx: function(){
+            var al = this.getAll();
+            return al[al.userList[al.lastLive]].defaultList
         },
         setDefaultList: function(idx){
             var al = this.getAll();
@@ -691,7 +702,6 @@ stuffAppServices.factory('TokenInterceptor', ['$q', '$injector', function ($q, $
         /* Revoke client authentication if 401 is received */
         responseError: function(rejection) {
             var tok = TokenService.getActiveToken();
-            console.log(tok)
             if (tok) {
                 console.log(rejection)
                 if (rejection != null && rejection.status === 401) {
@@ -703,6 +713,8 @@ stuffAppServices.factory('TokenInterceptor', ['$q', '$injector', function ($q, $
                     return true
                 }
             }
+            console.log('token is undefineserver is offline')
+            UserLS.setServerOnline(false);            
             return $q.reject(rejection);               
         }
     };
