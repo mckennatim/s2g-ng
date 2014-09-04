@@ -16,7 +16,6 @@ stuffAppControllers.controller('ItemsCtrl', ['$scope', function ($scope) {
 
 stuffAppControllers.controller('TimeCtrl', function ($scope, UsersData) {
     $scope.timestamp=Date.now();
-    console.log($scope.timestamp);
     $scope.addUser = function(){
         console.log('in addUser');
         UsersData.post().then(function(d){
@@ -177,51 +176,40 @@ stuffAppControllers.controller('RegisterCtrl', ['$scope', '$http', 'AuthService'
     };    
 }]);
 
-stuffAppControllers.controller('IsregCtrl', function ($scope, $state, UserLS, AuthService) {
-        $scope.numUsers = UserLS.numUsers();
-        $scope.user =UserLS.getUser(UserLS.getLastLive()) || UserLS.blankUser;
-        console.log('in isRegCtrl # of users = ' + $scope.numUsers);
-        console.log($scope.user)
-        if ($scope.numUsers==0){
-                $state.go('register');
-        } else if ($scope.numUsers==1 & $scope.user.apikey.length<10){
-                UserLS.setRegState('Enter apikey');
-                $state.go('register');
-        } else if ($scope.numUsers==1){//and there is apikey
-                console.log('ok going to authenticate');
-                AuthService.auth($scope.user.apikey).then(function(data){
-                        console.log(data);
-                        console.log(data.token);
-                        if (data.token.length >40){
-                                UserLS.postUser($scope.user, 'Authenticated');   
-                                UserLS.getUser($scope.user.name);       
-                        }
-                }, function(data){//if error
-                        console.log(data.message)
-                        $scope.dog = data.message
-                        var response = data;
-                });
-        }
-        console.log($scope.numUsers);
+stuffAppControllers.controller('IsregCtrl', function (TokenService, $state) {
+     if (TokenService.tokenExists()){
+        $state.go('list');
+    } else{
+        UserLS.setRegState('Get token');
+        $state.go('register');
+    }    
 });
 
-stuffAppControllers.controller('ListsCtrl', ['$scope', '$state', 'TokenService', 'UserLS', 'ListService', 'DbService', function ($scope, $state, TokenService, UserLS, ListService, DbService) {
+stuffAppControllers.controller('ListsCtrl', ['$scope', '$state', 'TokenService', 'UserLS', 'ListService', 'DbService', '$rootScope', function ($scope, $state, TokenService, UserLS, ListService, DbService, $rootScope) {
     if (TokenService.tokenExists()){
         console.log('in Lists ctrl');
-        var name = UserLS.getLastLive();
-        $scope.username = name;
-        DbService.updateUser().then(function(){
-            $scope.lists= UserLS.getLists();
-        });
-        $scope.lists = UserLS.getLists();
-        $scope.default = UserLS.getDefaultList();
-        // $scope.$watch('lists', function(newValue, oldValue){
-        //     console.log('watch is triggered');
-        //     console.log($scope.lists)
-        //     UserLS.updLists($scope.lists);
-        // });     
-        $scope.templ = 'partials/shops.html';
-        $scope.submit = function(){
+        var userName;
+        $scope.listsInput=''
+        $scope.templ = 'partials/shops.html';        
+        var online = $rootScope.online = false ;
+        $rootScope.$watch('online', function(newValue, oldValue){
+            if (newValue !== oldValue) {
+                online=$scope.online=newValue;
+                if(newValue){
+                    console.log('$rootScope.online changed to: '+$rootScope.online )
+                    DbService.updateUser().then(function(){
+                        $scope.lists= UserLS.getLists();
+                    });
+                }                
+            }                       
+        });       
+        userName=$scope.userName = UserLS.activeUser();
+        $scope.lists= UserLS.getLists(); 
+        $scope.goList = function(listInfo){
+            UserLS.setDefaultLid(listInfo);
+            $state.go('list');
+        };
+        $scope.add = function(){
             if ($scope.shops) {
                 console.log($scope.shops)
                 ListService.addList($scope.shops).then(function(data){
@@ -230,7 +218,8 @@ stuffAppControllers.controller('ListsCtrl', ['$scope', '$state', 'TokenService',
                         $scope.message=', either you or the server is offline, try later.'
                     }else{
                         $scope.lists.push(data)
-                        console.log(JSON.stringify($scope.lists))                       
+                        console.log(JSON.stringify($scope.lists))
+                        //add to UserLS                       
                     }
                 },function(data){
                     console.log(data);
@@ -238,10 +227,7 @@ stuffAppControllers.controller('ListsCtrl', ['$scope', '$state', 'TokenService',
                 $scope.shops = '';
              }
         };  
-        $scope.goList = function(idx){
-            UserLS.setDefaultList(idx);
-            $state.go('list');
-        };
+
         $scope.remove = function(list){
             console.log(list)
             alert('Are you sure you want to resign from this list?')
@@ -275,9 +261,9 @@ stuffAppControllers.controller('ListsCtrl', ['$scope', '$state', 'TokenService',
             DbService.putUser(stuff);
         };        
         $scope.join = function(){
-             if ($scope.shops) {
-                console.log($scope.shops)
-                ListService.joinList($scope.shops).then(function(data){
+            console.log($scope.listsInput)
+             if ($scope.listsInput) {
+                ListService.joinList($scope.listsInput).then(function(data){
                     console.log(data);
                     DbService.updateUser().then(function(){
                         $scope.lists= UserLS.getLists();
@@ -291,20 +277,65 @@ stuffAppControllers.controller('ListsCtrl', ['$scope', '$state', 'TokenService',
     }
 }]);
 
-stuffAppControllers.controller('ListCtrl', ['$scope', '$state', '$filter',  '$interval', '$window', 'ListService', 'TokenService', 'UserLS', 'DbService', function ($scope, $state, $filter, $interval, $window, ListService, TokenService, UserLS, DbService) {
+stuffAppControllers.controller('ListCtrl', ['$scope', '$state', '$filter',  '$interval', '$window', 'ListService', 'TokenService', 'UserLS', 'DbService', '$rootScope', function ($scope, $state, $filter, $interval, $window, ListService, TokenService, UserLS, DbService, $rootScope) {
     if (TokenService.tokenExists()){
         console.log('in list ctrl')
-        var lid, list, clist, listInfo, items;
+        var lid, list, clist, listInfo, items, online, userName;
+        $scope.items=[];
+        $scope.shops= UserLS.getLists();         
+        listInfo= $scope.currentShop = UserLS.getDefaultListInfo();
+        $scope.currentShop=$scope.shops[$scope.shops.map(function(e){return e.shops}).indexOf($scope.currentShop.shops)];//wtf: http://embed.plnkr.co/8JT8foXgE4qo9smvSv1t/preview
+        console.log($scope.currentShop)
+        online= $scope.online=$rootScope.online=false;
+        DbService.ckIfOnline();
+        $rootScope.$watch('online', function(newValue, oldValue){
+            if (newValue !== oldValue) {
+                console.log('$rootScope changed to: '+newValue)
+                online=$scope.online=newValue; 
+            }
+        });     
+        userName = UserLS.activeUser();
+        list=ListService.getClist(listInfo);
+        ListService.updList(list).then(function(result){
+            $scope.items=result.items;
+            $scope.$watch('items', function(newValue,oldValue){
+                if(newValue!== oldValue){
+                    console.log('watch $scope.items changed');
+                    ListService.updList(list).then(function(result){
+                        $scope.items=result.items;
+                    });
+                }
+            })
+        })
+        $scope.switch=function(shop){
+            listInfo=shop;
+            UserLS.setDefaultLid(listInfo);
+            list=ListService.getClist(listInfo);
+            $scope.items=list.items;
+            console.log(shop)
+        }
+    } else{
+        UserLS.setRegState('Get token');
+        $state.go('register');
+    };   
+}]);
+
+
+
+/*
+        //$scope.lists= UserLS.getLists();
         var orderBy = $filter('orderBy');
         var filter = $filter('filter');
         $scope.showAmt = false;
         $scope.showLoc = false;
         $scope.showTags = false;
         $scope.editedItem = null;
-        $scope.listIdx= UserLS.getDefaultListIdx();
+        //$scope.listIdx= UserLS.getDefaultListIdx();
         $scope.shops= UserLS.getLists();
-        console.log($scope.shops[$scope.listIdx]);
-        listInfo= $scope.currentShop = $scope.shops[$scope.listIdx];
+        //console.log(JSON.stringify($scope.shops))
+        //console.log($scope.shops[$scope.listIdx]);
+        //listInfo= $scope.currentShop = $scope.shops[$scope.listIdx];
+        //console.log(JSON.stringify(UserLS.getDefaultListInfo()));
         lid= listInfo.lid;
         if (! lid) {
             console.log('heading to lists')
@@ -313,6 +344,7 @@ stuffAppControllers.controller('ListCtrl', ['$scope', '$state', '$filter',  '$in
             console.log('didnt go to lists')
             list = ListService.getLS(listInfo);
             items =$scope.items = list.items;
+            console.log(JSON.stringify(list));
             //$scope.stores= list.stores;
             var mkt0={"id": "0", "name": "sort-alpha"}
             var stores=  [
@@ -353,9 +385,9 @@ stuffAppControllers.controller('ListCtrl', ['$scope', '$state', '$filter',  '$in
                 "aisles": []
               }
             }; 
-            stores.unshift(mkt0);
-            $scope.stores = stores;
-            $scope.currentStore=$scope.stores[0];
+            // stores.unshift(mkt0);
+            // $scope.stores = stores;
+            // $scope.currentStore=$scope.stores[0];
             $scope.reverse = true;
             $scope.order = function() {
                 var needed = filter($scope.items, ({done: false}));
@@ -386,7 +418,7 @@ stuffAppControllers.controller('ListCtrl', ['$scope', '$state', '$filter',  '$in
             };
 
 
-            //console.log($scope.stores[0].name)
+            console.log('$rootScope.online: '+$rootScope.online)
             ListService.update(list).then(function(data){
                 //console.log(data.items); 
                 items = $scope.items =data.items ;
@@ -402,7 +434,7 @@ stuffAppControllers.controller('ListCtrl', ['$scope', '$state', '$filter',  '$in
                     list.items = items;
                     $scope.timestamp= list.timestamp = Date.now();
                     $scope.cnt = $filter('filter')(items, {done:false}).length;
-                    $scope.online=UserLS.serverIsOnline();
+                    //$scope.online=UserLS.serverIsOnline();
                     $scope.query = '';
                     if (newValue !== oldValue) { // This prevents unneeded calls to update
                         ListService.update(list).then(function(data){
@@ -422,7 +454,6 @@ stuffAppControllers.controller('ListCtrl', ['$scope', '$state', '$filter',  '$in
             };
             $scope.update=function(){
                 console.log('in scope update')
-                ListService.ckIfOnline();
                 ListService.update(clist()).then(function(data){
                     items = $scope.items =data.items              
                 }, function(data){//
@@ -512,11 +543,8 @@ stuffAppControllers.controller('ListCtrl', ['$scope', '$state', '$filter',  '$in
                 console.log(idx);
             }
         };
-    } else{
-        UserLS.setRegState('Get token');
-        $state.go('register');
-    };   
-}]);
+    */    
+
 //     if (TokenService.tokenExists()){
 //         console.log('in  ListCtrl')
 //         var name = UserLS.getLastLive();
@@ -561,9 +589,15 @@ stuffAppControllers.controller('UserCtrl', ['$scope', 'DbService',  function ($s
     DbService.updateUser();
 
 }]);
-stuffAppControllers.controller('ShopsCtrl', ['$scope', 'DbService', function ($scope, DbService) {
+
+stuffAppControllers.controller('TemplCtrl', ['$scope', 'DbService',  function ($scope, DbService) {
+    $scope.dog = 'petey';
+}]);
+stuffAppControllers.controller('ShopsCtrl', ['$scope', 'DbService', 'UserLS', '$rootScope',function ($scope, DbService, UserLS, $rootScope) {
     $scope.dog = 'fritz';
-    $scope.templ2 = 'partials/lists.html';
+    $rootScope.online=false;
+    //$scope.templ2 = 'partials/lists.html';
+    //$scope.lists= UserLS.getLists();
 }]);
 stuffAppControllers.controller('ConfigCtrl', ['$scope', function ($scope) {
     $scope.dog = 'kazzy';
@@ -600,7 +634,7 @@ stuffAppControllers.controller('AdminCtrl', ['$scope', 'UserLS',  'TokenService'
     $scope.userL='';
     $scope.outputL= '';
     $scope.listAllL = function(){
-        $scope.outputL=ListService.getAll();
+        $scope.outputL=JSON.parse(localStorage.getItem('s2g_clists')) || {};
         $scope.userL='';
     }; 
     $scope.findL = function(){

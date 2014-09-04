@@ -52,9 +52,14 @@ config(['$urlRouterProvider', '$stateProvider', function($urlRouterProvider, $st
 
 StuffApp.config(function ($httpProvider) {
     $httpProvider.interceptors.push('TokenInterceptor');
-    console.log($httpProvider.interceptors);
+    $httpProvider.interceptors.push('OnlineInterceptor');
 });
-StuffApp.run(function(ListService){
-  console.log('this is running')
-  ListService.ckIfOnline();
+StuffApp.run(function(DbService, $window, $rootScope){
+  $rootScope.online=false;
+  $rootScope.status=0;
+  //DbService.ckIfOnline();
+  var onFocus = function(){
+    DbService.ckIfOnline();
+  }
+  $window.onfocus = onFocus;
 })

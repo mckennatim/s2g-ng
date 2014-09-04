@@ -4,31 +4,36 @@
 
 </br></br></br>
 <p>
-	Hey {{username}} {{message}}
+	<span class="glyphicon glyphicon-signal" ng-show="online"></span>
+	<span class="glyphicon glyphicon-ban-circle" ng-show="!online"></span>
+	Hey {{userName}} {{message}}
 </p>
 <div>
 	<ul class="list-group">
 		<li ng-repeat="list in lists track by $index" class="list-group-item lists" ng-class="{editing: list==editedList}" > 
-				<i ng-click="edit(list)" class="delx glyphicon glyphicon-pencil " ></i> 
+				<i ng-click="edit(list)" class="delx glyphicon glyphicon-pencil " ng-show="online"></i> 
 				<span class="view">
-					<span ng-click="goList($index)" class="list-name">{{list.shops}}</span><br>
+					<span ng-click="goList(list)" class="list-name">{{list.shops}}</span><br>
 				</span>			 
 				<span class="edit">
 					<form ng-submit="doneEditing(list)" accept-charset="utf-8">
 						<input ng-trim="false" ng-model="list.shops" item-escape="revertEdit(list)" size="18"  ></span>
 					</form>	
 				</span>  		
-				<i ng-click="remove(list)" class="delx glyphicon glyphicon-remove " ></i> 			 
+				<i ng-click="remove(list)" class="delx glyphicon glyphicon-remove " ng-show="online"></i> 			 
 				<span ng-click="goList($index)" class="list-lid" >repository:{{list.lid}}   </span>			
 		</li>
 	</ul>
-	<form name='regForm' >
+	<form name='regForm' ng-show="online">
 		<div class='form-group'>
-			<label><input type="text" name="newList" placeholder="add-list/join-repo" ng-model="shops"></label>
-			<a class="label bkg-register" ng-click="submit()">Add</a>
+			<label><input type="text" name="newList" placeholder="add-list/join-repo" ng-model="listsInput"></label>
+			<a class="label bkg-register" ng-click="add()">Add</a>
 			<a class="label bkg-user" ng-click="join()">Join</a>
  		</div>
 	</form> 
 </div>
-<div ng-include="templ" ></div>
+<!-- <div ng-include="templ" ng-controller="ShopsCtrl"></div> -->
+
+</div>
+
 </div>

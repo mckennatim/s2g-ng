@@ -1,0 +1,151 @@
+==windows==
+10/30/13 replaced apt 4 balances with JB sash and door knife style shoe. Problem was exploding upper pulleys. There are replacement pins for six windows on basement board. 
+{|
+!number !! glasssize !!sash opening !!balance-lower !!balance-upper
+|-
+|5 || 27x26 || 2-6 x 4-9 
+|-
+|2 || 20x26 || 1-11 5/8 x 4-9 || DB-EO3-26-HD || DB-LO2-24-HD
+|-
+|2 || 27X24 || 2-6 x 4-5 || DB-L02-24-HD || DB-L02-22-HD
+|}
+
+[http://www.swisco.com/cl/Tilt-Window-Replacement-Pivot-Lock-Shoes pivot shoe locks for fancy balance]
+
+[http://www.swisco.com/Cam-Pivot-Pair/pd/Channel-Balance-Sash-Clips_Pivots/17-093 sash pivot clips] for this 
+[http://www.swisco.com/24-inch/pd/Series-751-Channel-Balances/S751-24 balance]
+
+
+biege jamb liner
+
+balance 
+==plumbing==
+===kitchen faucets===
+;apt 4: <s>[http://www.homedepot.com/p/Delta-Foundations-2-Handle-Side-Sprayer-Kitchen-Faucet-in-Stainless-21988LF-SS/203898910?keyword=delta+21988lf-ss#.Um7Cxfmsgk0 Delta Model # 21988LF-SS SKU # 1000000695], [http://www.homedepot.com/p/DANCO-3S-2H-C-Hot-Cold-Stems-for-Delta-Sink-and-Bathroom-Faucets-5-Pack-09989/100153787?keyword=daco+09989#.Um7BoPmsgk0 danco repair kit Model # 09989 Store SKU # 649094]
+:[https://www.dropbox.com/sh/2wj9omk04tei56x/1S-5AtG2ZE#lh:null-deltaApt2K.PNG picture of faucet and repair kits]</s>
+: Central Brass kitchen replacement stem - K-453-C/H (hot water stem replaced with Ace on 11/3/13
+;apt 2: Central Brass kitchen replacement stem - K-453-C/H
+
+===cast iron replacement===
+I would use a Fernco donut or a Ty-seal. Then a pvc soil adapter.
+
+===hot water heater===
+====apt 2====
+Navien CR-210(A)
+
+:"With the power OFF, press “Function”+“Pro” key together for 3 seconds"
+
+==heating==
+[https://customer.honeywell.com/resources/Techlit/TechLitDocuments/63-0000s/63-9581O.pdf oil burner primary controls]
+
+11/3/13 Sometime after everyone has gotten oil and fired up their heating systems I will have the boilers cleaned and serviced. (they need oil in the tanks to do it). It is getting a little bit harder to find good independent service companies so I may have to set service up with each of your oil suppliers.
+1) Could you let me know when you have oil and who you bought it from.
+2) If you notice and water dripping from radiators let me kpow about that too.
+
+Thanks,
+
+==mice==
+11/6/13
+
+[http://www.greenplanetpest.com/residential.html Green Planet] (617) 535-1943 - Todd 617-650-6903  $750 for 1 year contract.
+mice
+I've got a call in to Green Planet. They were the very nice mouse proofing/trapping people from a couple of years ago. I'l let you know when it is set up for and I'll accompany them from unit to unit letting them in if you are not home. Let me know if you have any concerns.
+
+==ext.paint 2013==
+[https://docs.google.com/spreadsheet/ccc?key=0AtcxZlBaSh4idDRUZnZCdzJpejBnZlFoUG9sdlpKWFE&usp=sharing google doc]
+====6/20/13====
+
+Happy Summer,
+Thanks for your tolerance on the painting. After endless rain all the front porches will again be livable by Sunday Afternoon. 
+
+*I plan on coating the decks on Friday morning, right after the mail comes. I'll put your mail outside your door.
+*The Front steps will not be usable From Friday until Saturday. 
+
+=====Clearing Rear Porches=====
+On Monday I will start the rear porches. 
+*Please clear everything from the rear porches by Sunday Evening.
+*Please keep all the windows facing the rear porch closed while the porches are being worked on.
+*My schedule will change for the back porches since it gets hot back there in the afternoon once the sun comes around. I plan at starting at 7:00 AM.
+ 
+
+
+==contact info==
+"Donna Tim Tai Cuipylo ches5" <dcuipylo@cuipylaw.com>, "Kileki & James ches3" <kspar_8@hotmail.com>, "Maddy & Bill ches2" <willard_simmons@yahoo.com>, "Raul & Suzanne ches1" <rcjr@altstudios.net>, "Sarenna Stein ches4" <sarenna_stein@yahoo.com>, 
+
+==ads==
+=====craigslist add 1/15/10=====
+Rent a beautiful 4 room, 1 bedroom apartment on 1st floor of a 1921 three-decker in Jamaica Plain. The apartment is a 5 minute walk to either Stonybrook or Green Street stations on the Orange line or the #39 bus. It has hardwood floors, a large eat-in kitchen, living room, dining room and bath with tub. Also includes one off the street parking spot, shared patio barbecue, gardening area and free laundry in the basement. You pay heat and utilities but the building is insulated and the windows are new. Available now. 
+Call Tim or Peri at 617 524-0938
+c 617 817-8501
+c 857 498-2574
+==basement==
+==apt1==
+
+==apt2==
+### work assessment 9/3/14
+Rewire, replace brass pipes, add closet for front bedroom, repaint
+
+==apt3==
+==apt4==
+==apt5==
+### work asessment 9/3/14
+rebuild shower
+replace brass pipes in bath
+#### email to Tim and Donna 9/3/14
+
+Hi Donna and Tim,
+
+Noah and I started work on Sarenna's apartment today. There are a couple of things that need to be done that will impact you:
+
+#### shower in big bathroom
+The closet ceiling and living room ceiling in Sarenna's apartment show the evidence of the leaks caused by the shower door and collapsed tiles. It doesn't make a lot of sense to repair and replace ceilings without addressing the problems of the shower.
+
+#### rear bathroom supply piping
+
+There are very few brass water pipes left in the building. All the piping in Sarenna's apartment is brass<s> and, as best as I can tell, the cold water piping in your rear bath is also brass. The second floor piping will be replaced now as it is in poor condition and who knows when I will next be able to get into that apartment. While it is possible to reconnect your old brass pipes to the new copper pipes, it might make more sense to replace all the remaining old brass piping in one fell swoop. That would mean pulling off a band of plaster 2'x 6' under the cabinets in Tai's room to reconnect the fixtures from the back. In either case there will be a a stretch of hours where the water in that back bath will be off untill the brass from the second floor to the basement is replaced.</s>
+
+#### one possible scenario
+
+My preference would be to rebuild your shower and floor (and repaint bath walls and ceilings) first so you have a nice working bath. it is hard to say if that could be done in 3 days to 6 days, it depends on what I find and in making sure all the items I might need are available and ordered before I start. 
+
+After that is all done we'd run the new piping from the basement to second floor (a short (couple of hour) disruption in water to your back bath). Then, in one day, I would switch over your piping and reconnect the bath, sink and toilet to the new piping. I'd probably be back a second day to sheet rock spackle and repaint the wall in Tai's room.
+
+There are other scenarios. This is a good time for me as I can devote full time to it and Noah is available sometimes. But it would be also feasible to do less  on the third floor and reduce the disruption in your apartment.
+
+Please ponder the possibilities. I will give you a call this evening and I could come by at your convenience to better explain the options.
+
+Thanks,
+
+Tim McKenna
+857-498-2574
+
+
+====pear crisp recipe====
+*heat oven to 375
+*slice 6-8 pears, peal the sections where the skin is rough
+*squeeze a lemon over them in a baking pan and mix in a mixture of 1 tblspoon of corn starch, ~1/3 cup of white sugar & 1/2 tsp cinnamon
+*food process till crumbly 1/3 cup flour, 1tsp cinnamon and 1/2 cup of brown sugar + a little salt and about 3 tbsp butter 
+*add 1/2 cup of oats and some nuts and pulse the food processor again
+*pour the mixture over the pears and bake for 40 min.
+
+===appliance info===
+
+====apt 5 stove====
+Apt 5 stove Ge Profile JGSP32GEV1BB
+
+http://www.kpappliances.com/index.php?dispatch=products.view&product_id=1641 $541
+
+The first thing I would check is the oven (bake) igniter. How long takes to light up the burner? If it's more then 60 seconds since you've heard a click from the control then the igniter is bad and has to be replaced.
+
+The next step is to check the oven temperature sensor. Pull the range out of the wall, unplug the power cord, remove the back panel and locate the two wires plug for the oven sensor. Unplug it and check the resistance. It should be about 1100 Ohms at the room temperature. If it has more then 20 Ohms difference replace the oven sensor.
+
+If the oven igniter and the oven temperature sensor are fine then the problem is a bad control board.
+
+- The part number for the new oven igniter AP2020569
+
+- The part number for the new oven sensor AP2023670
+
+- The part number for the new oven control board AP3792697
+
+Good luck.
+Gene.

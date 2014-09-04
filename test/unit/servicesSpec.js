@@ -175,10 +175,20 @@ describe('TokenService', function(){
         var rej = {status: 401};
         var response =  TokenInterceptor.responseError(rej);
         var tok = TokenService.getAll();
-        console.log(response.then);
-        console.log(tok.userList)
         expect(tok.userList.length).toBe(1);        
         expect(response.then).toBeDefined();
     }));       
 }) ;  
+describe('ListService', function(){
+    beforeEach(function(){
+
+    })
+    beforeEach(module(function(){
+
+    }))
+    beforeEach(inject(function(){
+
+    }))
+    console.log()
+})
 

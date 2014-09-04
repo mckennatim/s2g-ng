@@ -1,27 +1,4 @@
-{
-  "default": 0,
-  "stores": [
-    "s_Bereti",
-    "s_Bereto",
-    "s_Bereta"
-  ],
-  "s_Bereti": {
-    "name": "Stop&Shop",
-    "aisles": [
-      "produce",
-      "canned",
-      "meats",
-      "baking",
-      "snacks",
-      "paper/plastic/cleaning",
-      "dairy",
-      "bread"
-    ],
-    "address": "301 Center St, Jamaica Plain, MA 02130",
-    "url": "http://stopandshop.shoplocal.com/stopandshop/default.aspx?action=entry&pretailerid=-99254&siteid=673&storeID=2598877"
-  },
-  "s_Bereto": {
-    "name": "WholeFoods",
-    "aisles": []
-  }
-}
+{"Jutebi":{"lid":"Jutebi","shops":"groceries","timestamp":1395763172175,"items":[{"product":"banana","done":false,"tags":[],"amt":{}},{"product":"coffee","done":false,"tags":[],"amt":{}},{"product":"apples","done":true,"tags":["produce"],"amt":{"qty":3,"unit":"3lb bag"}},{"product":"milk","done":false,"tags":["orgainic","dairy"],"amt":{"qty":1,"unit":"1/2 gal"}},{"product":"butter","done":false,"tags":[],"amt":{}},{"product":"teff flour","done":true,"tags":[],"amt":{}}],"stores":[{"id":"s_Bereti","name":"Stop&Shop"}],"users":["tim"]},"Guvupa":{"lid":"Guvupa","shops":"groceries","timestamp":1395763172175,"items":[],"users":[]},"Kidoju":{"lid":"Kidoju","shops":"hardware","timestamp":1395763172175,"items":[{"product":"duck tape","done":false,"tags":[],"amt":{}},{"product":"duck tape","done":false,"tags":[],"amt":{}},{"product":"screws","done":false,"tags":[],"amt":{}},{"product":"fuzz balls","done":true,"tags":[],"amt":{}}],"users":["tim7","tim"]},"Woduvu": {"lid":"Woduvu","shops":"drugs","timestamp":1395763172175,"items":[],"users":[]}}
+
+
+{"lastLive":0,"activeUser":"tim","regState":"Authenticated","regMessage":"all set you are authorized and have token","userList":["tim"],"tim":{"_id":"5403d1921bc51d0c0aab879b","apikey":"Natacitipavuwunexelisaci","defaultLid":"Jutebi","defaultList":0,"email":"mckenna.tim@gmail.com","id":1,"lists":[{"lid":"Jutebi","shops":"groceries"},{"lid":"Kidoju","shops":"hardware"}],"name":"tim","role":"admin","timestamp":1409667265319}}

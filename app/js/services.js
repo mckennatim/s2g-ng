@@ -50,8 +50,59 @@ stuffAppServices.factory('ItemsData', function($http) {
 
 stuffAppServices.factory( 'ListService', ['$q', '$http', '$log', 'DbService', 'UserLS', '$rootScope', function($q, $http, $log, DbService, UserLS, $rootScope){
     var key = 's2g_lists';
-    var blankLists = {listsList: []};
-    return{    
+    var blankLists = {};
+    return{ 
+        getClist: function(listInfo){
+            var key = 's2g_clists';
+            var al=JSON.parse(localStorage.getItem(key)) || {};
+            var user = UserLS.activeUser();
+            var list={}
+            if(!al[listInfo.lid]){
+                list = {lid: listInfo.lid, shops: listInfo.shops, timestamp: 0, items: [], users: [user]}
+                al[list.lid]=list;
+                localStorage.setItem(key, JSON.stringify(al));
+            }else{
+                list=al[listInfo.lid]
+            }
+            return list
+        },   
+        setClist: function(list){
+            var key = 's2g_clists'
+            var al=JSON.parse(localStorage.getItem(key)) || {};
+            al[list.lid]=list;
+            localStorage.setItem(key, JSON.stringify(al));
+        },
+        getPlist: function(listInfo){
+            var key = 's2g_plists';
+            var al=JSON.parse(localStorage.getItem(key)) || {};
+            var user = UserLS.activeUser();
+            console.log(al[listInfo.lid])
+            if(!al[listInfo.lid]){
+                var list = {lid: listInfo.lid, shops: listInfo.shops, timestamp: 0, items: [], users: [user]}
+                al[list.lid]=list;
+                localStorage.setItem(key, JSON.stringify(al));
+            }
+        },   
+        setPlist: function(list){
+            var key = 's2g_plists'
+            var al=JSON.parse(localStorage.getItem(key)) || {};
+            al[list.lid]=list;
+            localStorage.setItem(key, JSON.stringify(al));
+        }, 
+        updList: function(list){
+            var deferred =$q.defer();
+            var listInfo = {lid: list.lid, shops: list.shops}
+            console.log('in updList, $rootScope: ' +$rootScope.online)
+            if(!$rootScope.online){
+                this.setClist(list)
+                deferred.resolve(list)
+            }else{  
+                var c = list;
+                var p = getPlist(listInfo);
+
+            }
+            return deferred.promise
+        },       
         getDefault: function(){
             var name = UserLS.getLastLive();
             var dl= UserLS.getDefaultList();
@@ -73,15 +124,14 @@ stuffAppServices.factory( 'ListService', ['$q', '$http', '$log', 'DbService', 'U
             return list
         },
         getLS:  function(listInfo){
-            console.log('in getLS')
-            console.log(listInfo)
+            console.log('in ListService.getLS')
             var ax, lid, shops, list;
             ax = this.getAll();
             lid = listInfo.lid;
             shops = listInfo.shops;
             list = ax[lid];
             if (! list){
-                list = {lid: lid, shops: shops, timestamp: 0, items: [] }
+                list = {lid: lid, shops: shops, timestamp: 0, items: [], users: []}
                 this.putLS(list);
             };            
             return list;
@@ -89,8 +139,6 @@ stuffAppServices.factory( 'ListService', ['$q', '$http', '$log', 'DbService', 'U
         putLS: function(list){
             console.log('in putLS')
             var ax = this.getAll();
-            ax.listsList.push(list.lid)
-            ax.listsList = _.uniq(ax.listsList)
             ax[list.lid]=list;
             //console.log(JSON.stringify(ax))
             localStorage.setItem(key, JSON.stringify(ax));
@@ -110,64 +158,68 @@ stuffAppServices.factory( 'ListService', ['$q', '$http', '$log', 'DbService', 'U
         getDB: function(lid){
 
         },
-        ckIfOnline: function(){
-            var s;
-            var deferred = $q.defer();
-            $http.get(httpLoc).   
-                success(function(data, status) {
-                    if(status==200){
-                        $rootScope.online=true;
-                        UserLS.setServerOnline(true);
-                        s=data
-                        deferred.resolve(data)
-                    }else{
-                        $rootScope.online=false;
-                        UserLS.setServerOnline(false);
-                        s= data
-                        deferred.reject(data)                        
-                    }
-                    console.log('setServerOnline to tf') 
-                    s=deferred.promise;
-                    return s;                      
-                }).
-                error(function(data, status){
-                    $rootScope.online=false;
-                    UserLS.setServerOnline(false);
-                    console.log('checking if online, error')
-                    console.log(UserLS.serverIsOnline())
-                    s=data
-                    deferred.reject(data)
-                }); 
-                s=deferred.promise;
-                return s;                          
-        },
+        // ckIfOnline: function(){
+        //     console.log('in ListsService.ckifOnline')
+        //     var s;
+        //     var deferred = $q.defer();
+        //     $http.get(httpLoc).   
+        //         success(function(data, status) {
+        //             if(status==200){
+        //                 $rootScope.online=true;
+        //                 UserLS.setServerOnline(true);
+        //                 s=data
+        //                 deferred.resolve(data)
+        //             }else{
+        //                 $rootScope.online=false;
+        //                 UserLS.setServerOnline(false);
+        //                 s= data
+        //                 deferred.reject(data)                        
+        //             }
+        //             console.log('setServerOnline to tf') 
+        //             s=deferred.promise;
+        //             return s;                      
+        //         }).
+        //         error(function(data, status){
+        //             $rootScope.online=false;
+        //             UserLS.setServerOnline(false);
+        //             console.log('checking if online, error')
+        //             console.log(UserLS.serverIsOnline())
+        //             s=data
+        //             deferred.reject(data)
+        //         }); 
+        //         s=deferred.promise;
+        //         return s;                          
+        // },
         update: function(list){            
             console.log('in update')
             var c, p, s, updItems, cts, pts, sts, deferred, lid;
-            var serverIsOnline = UserLS.serverIsOnline();
-            console.log(serverIsOnline);
+            console.log('serverIsOnline: '+$rootScope.online);
             var instance =this;
             lid = list.lid
             c = list;
+            cts=Date.now();
+            if (!c.items){
+                c.timestamp=0;
+            }else{
+                c.timestamp = cts;
+            }            
             //console.log(JSON.stringify(c.items))
             cts = Date.now();
             p = this.getLS(list);
+            //console.log(c)
             pts = p.timestamp;
             deferred = $q.defer();
-            if(serverIsOnline){
+            if($rootScope.online){
                 var url=httpLoc + 'lists/'+lid; 
                 $http.get(url).   
                     success(function(data, status) {
-                        console.log(UserLS.serverIsOnline());
-                        if(!UserLS.serverIsOnline()){
-                            console.log('no connection, just update LS');
-                            list.timestamp = cts;
-                            instance.putLS(list);
-                            deferred.resolve(list);
+                        if(!$rootScope.online){
+                            console.log('no connection, shouldnt be here');
+                            instance.putLS(c);
+                            deferred.resolve(c);
                             return
                         }
                         console.log('connection exists')
-                        UserLS.setServerOnline(true);
                         s = data;
                         sts = s.timestamp
                         console.log(sts)
@@ -201,12 +253,15 @@ stuffAppServices.factory( 'ListService', ['$q', '$http', '$log', 'DbService', 'U
                 return s;                  
             } else{
                 console.log('no connection, just update LS');
-                list.timestamp = cts;
+                if (list.items.length==0){
+                    list.timestamp=0
+                }else{
+                    list.timestamp = cts;
+                }
                 instance.putLS(list);
                 list = deferred.promise; 
                 return list
             }
-            console.log('returned here')
         },
         addList: function(shops){
             var s;
@@ -215,6 +270,7 @@ stuffAppServices.factory( 'ListService', ['$q', '$http', '$log', 'DbService', 'U
             $http.post(url).
                 success(function(data,status){
                     s=data
+                    console.log(data)
                     deferred.resolve(data)
                 }).
                 error(function(data,status){
@@ -246,6 +302,7 @@ stuffAppServices.factory( 'ListService', ['$q', '$http', '$log', 'DbService', 'U
             var deferred = $q.defer();     
             $http.put(url).
                 success(function(data,status){
+                    this.putLS(data)
                     s=data
                     deferred.resolve(data)
                 }).
@@ -377,6 +434,10 @@ stuffAppServices.factory('UserLS', function() {
     var blankUsers= {lastLive:0, regState: 'Register', regMessage: '', userList:[]};
     var serverOnline = true;    
     return{
+        activeUser: function(){
+            var al=this.getAll();
+            return al.activeUser;
+        },
         serverOnline: serverOnline,
         setServerOnline: function(tf){
             serverOnline = tf;
@@ -422,7 +483,6 @@ stuffAppServices.factory('UserLS', function() {
             var al = this.getAll();
             var usr = al[al.userList[al.lastLive]]
             var ret= usr.lists;
-            console.log(ret);
             return ret;
         },
         getDefaultList : function(){
@@ -434,6 +494,16 @@ stuffAppServices.factory('UserLS', function() {
             //console.log(usr);
             return ret;
         },
+        getDefaultListInfo: function(){
+            var al = this.getAll();
+            var usr = al[al.userList[al.lastLive]]
+            var lists= usr.lists;
+            var lid = usr.defaultLid;
+            var res  = lists.filter(function(obj){
+                return obj.lid==lid;
+            })
+            return res[0];
+        },
         getDefaultListIdx: function(){
             var al = this.getAll();
             return al[al.userList[al.lastLive]].defaultList
@@ -443,6 +513,11 @@ stuffAppServices.factory('UserLS', function() {
             al[al.userList[al.lastLive]].defaultList= idx
             localStorage.setItem(this.key, JSON.stringify(al));
         },
+        setDefaultLid: function(list){
+            var al = this.getAll();
+            al[al.userList[al.lastLive]].defaultLid= list.lid
+            localStorage.setItem(this.key, JSON.stringify(al));
+        },        
         pushList: function(list){
             var al = this.getAll();
             al[al.userList[al.lastLive]].lists.push(list)
@@ -509,7 +584,7 @@ stuffAppServices.factory('UserLS', function() {
         },
         numUsers: function(){
             var bl = this.getAll();
-            console.log(bl)
+            //console.log(bl)
             return bl.userList.length;
         },
         delUser: function(name){
@@ -592,17 +667,21 @@ stuffAppServices.factory('AuthService', ['$http', '$q', 'DbService',  function($
 }]);
 stuffAppServices.factory('DbService', ['$http', '$q', 'UserLS','TokenInterceptor' , function($http, $q, UserLS, TokenInterceptor) {
     return {
+        ckIfOnline: function(){
+            console.log('in DbService.ckifonline')
+            $http.get(httpLoc);                      
+        },          
         updateUser: function(){ 
             var uname = UserLS.getLastLive()
             var url=httpLoc + 'users/'+uname;      
             var deferred = $q.defer();
             $http.get(url, {withCredentials:true}).   
                 success(function(data, status) {
-                    if(data != undefined){
-                        console.log(data)
+                    if(data != undefined && status==200){
+                        //console.log(data)
                         UserLS.postUser(data, 'Authenticated');                      
                     };
-                    console.log(status);
+                    //console.log(status);
                     deferred.resolve(data);
                 }).
                 error(function(data, status){
@@ -713,8 +792,8 @@ stuffAppServices.factory('TokenInterceptor', ['$q', '$injector', function ($q, $
                     return true
                 }
             }
-            console.log('token is undefineserver is offline')
-            UserLS.setServerOnline(false);            
+            //console.log('token is undefineserver is offline')
+            //UserLS.setServerOnline(false);            
             return $q.reject(rejection);               
         }
     };
@@ -778,7 +857,7 @@ stuffAppServices.factory('TokenService', ['$q', 'UserLS', function ($q, UserLS) 
                 al.userList.splice(idx, 1);
             }
             delete al[name]
-            console.log(al);
+            //console.log(al);
             localStorage.setItem(this.key, JSON.stringify(al));
         },
         deleteActiveToken: function(){
@@ -787,3 +866,21 @@ stuffAppServices.factory('TokenService', ['$q', 'UserLS', function ($q, UserLS) 
         }
     };
 }]);
+
+stuffAppServices.factory('OnlineInterceptor', function($rootScope, $q){
+        var Interceptor ={
+            responseError: function(response){
+                $rootScope.status = response.status;
+                $rootScope.online = false;
+                //console.log('inter error ' +$rootScope.online +response.status)
+                return $q.when(response);
+            },
+            response: function(response){
+                $rootScope.status = response.status;
+                $rootScope.online = true;
+                //console.log('inter resp '+$rootScope.online+ response.status)
+                return $q.when(response);           
+            }
+        };
+        return Interceptor;
+})

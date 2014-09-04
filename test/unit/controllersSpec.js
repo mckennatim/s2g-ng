@@ -13,29 +13,29 @@
                     expect(scope.dog).toBe('petey');        
                 }));
             });
-            describe('IsregCtrl', function() {
-                var ctrl
-                , UserLS
-                , scope
-                , state
-                , AuthService;
-                //beforeEach(module('stuffApp'));    
-                beforeEach(inject(function($rootScope, $controller) {
-                    UserLS = {
-                        numUsers: function() {return 2;},
-                        getLastLive: function(){return 'tim';},
-                        getUser: function(){return s2g_users['tim'];}
-                    };     
-                    AuthService = {
-                        auth: function() {}
-                    };
-                    scope = $rootScope.$new();      
-                    ctrl = $controller('IsregCtrl', {$scope: scope , $state: state, UserLS: UserLS, AuthService: AuthService });
-                }));    
-                it('Should call UserLS numUsers and get 2', function() {
-                    expect(scope.numUsers).toBe(2);
-                });
-            });
+            // describe('IsregCtrl', function() {
+            //     var ctrl
+            //     , UserLS
+            //     , scope
+            //     , state
+            //     , AuthService;
+            //     //beforeEach(module('stuffApp'));    
+            //     beforeEach(inject(function($rootScope, $controller) {
+            //         UserLS = {
+            //             numUsers: function() {return 2;},
+            //             getLastLive: function(){return 'tim';},
+            //             getUser: function(){return s2g_users['tim'];}
+            //         };     
+            //         AuthService = {
+            //             auth: function() {}
+            //         };
+            //         scope = $rootScope.$new();      
+            //         ctrl = $controller('IsregCtrl', {$scope: scope , $state: state, UserLS: UserLS, AuthService: AuthService });
+            //     }));    
+            //     it('Should call UserLS numUsers and get 2', function() {
+            //         expect(scope.numUsers).toBe(2);
+            //     });
+            // });
         });
     });
 

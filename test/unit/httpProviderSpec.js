@@ -8,53 +8,54 @@
  * Hopefully, that makes this spec a good learning tool.
  */
 
-describe('stuffApp Module', function () {
+describe('httpProvider', function () {
 
-    describe('config: with module callback in beforeEach', function () {
 
-        var httpProvider;
+    // describe('config: with module callback in beforeEach', function () {
 
-        beforeEach(module('stuffApp', function ($httpProvider) {
-            console.log('BEGIN: module callback');
-            httpProvider = $httpProvider;
-            console.log('END: module callback');
-        }));
+    //     var httpProvider;
 
-        it('should show that beforeEach module callback is not executed when test does not need module', function () {
-            console.log('BEGIN: it test - no module');
-            expect(true).toBeTruthy();
-            console.log('END: it test - no module');
-        });
+    //     beforeEach(module('stuffApp', function ($httpProvider) {
+    //         console.log('BEGIN: module callback');
+    //         httpProvider = $httpProvider;
+    //         console.log('END: module callback');
+    //     }));
 
-        it('should have added authTokenHttpInterceptor as http interceptor (inject calls module callback before run test)', inject(function () {
-            console.log('BEGIN: it test');
-            expect(httpProvider.interceptors).toContain('TokenInterceptor');
-            console.log('END: it test');
-        }));
+    //     it('should show that beforeEach module callback is not executed when test does not need module', function () {
+    //         console.log('BEGIN: it test - no module');
+    //         expect(true).toBeTruthy();
+    //         console.log('END: it test - no module');
+    //     });
 
-    });
+    //     it('should have added authTokenHttpInterceptor as http interceptor (inject calls module callback before run test)', inject(function () {
+    //         console.log('BEGIN: it test');
+    //         expect(httpProvider.interceptors).toContain('TokenInterceptor');
+    //         console.log('END: it test');
+    //     }));
 
-        describe('config: do everything inside the test', function () {
+    // });
 
-            it('should be able to test provider with module inside it()', function () {
-                console.log('BEGIN: it test: all-in-it');
-                var httpProviderIt;
-                module('stuffApp', function ($httpProvider) {
-                    console.log('BEGIN: module callback');
-                    httpProviderIt = $httpProvider;
-                    console.log('END: module callback');
-                });
-                inject(function () {
-                    console.log('BEGIN: it test - inject');
-                    // Works inside inject()
-                    expect(httpProviderIt.interceptors).toContain('TokenInterceptor');
-                    console.log('END: it test - inject');
-                });
-                // Also works after/outside inject()
-                expect(httpProviderIt.interceptors).toContain('TokenInterceptor');
-                console.log('END: it test: all-in-it');
-            });
+    //     describe('config: do everything inside the test', function () {
 
-    });
+    //         it('should be able to test provider with module inside it()', function () {
+    //             console.log('BEGIN: it test: all-in-it');
+    //             var httpProviderIt;
+    //             module('stuffApp', function ($httpProvider) {
+    //                 console.log('BEGIN: module callback');
+    //                 httpProviderIt = $httpProvider;
+    //                 console.log('END: module callback');
+    //             });
+    //             inject(function () {
+    //                 console.log('BEGIN: it test - inject');
+    //                 // Works inside inject()
+    //                 expect(httpProviderIt.interceptors).toContain('TokenInterceptor');
+    //                 console.log('END: it test - inject');
+    //             });
+    //             // Also works after/outside inject()
+    //             expect(httpProviderIt.interceptors).toContain('TokenInterceptor');
+    //             console.log('END: it test: all-in-it');
+    //         });
+
+    // });
 
 });
