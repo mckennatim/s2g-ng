@@ -559,7 +559,7 @@ stuffAppServices.factory('UserLS', function() {
         },
         updLists: function(lists){
             var al = this.getAll();
-            al[al.userList[al.activeUser]].lists=lists
+            al[al.activeUser].lists=lists
             localStorage.setItem(this.key, JSON.stringify(al));
         },
         updList: function(list){

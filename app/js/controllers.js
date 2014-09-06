@@ -218,21 +218,21 @@ stuffAppControllers.controller('ListsCtrl', ['$scope', '$state', 'TokenService',
             }                       
         });         
         $scope.add = function(){
-            if ($scope.shops) {
-                console.log($scope.shops)
-                ListService.addList($scope.shops).then(function(data){
+            if ($scope.listsInput) {
+                console.log($scope.listsInput)
+                ListService.addList($scope.listsInput).then(function(data){
                     if (data==undefined){
                         console.log(data);
                         $scope.message=', either you or the server is offline, try later.'
                     }else{
                         $scope.lists.push(data)
                         console.log(JSON.stringify($scope.lists))
-                        //add to UserLS                       
+                        UserLS.updLists($scope.lists);                     
                     }
                 },function(data){
                     console.log(data);
                 });
-                $scope.shops = '';
+                $scope.listsInput = '';
              }
         };  
 
