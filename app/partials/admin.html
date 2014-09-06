@@ -5,6 +5,8 @@
 <div class='panel-body'>
 
 <form name='AdminForm'>
+  <button type="button" ng-click="reset()">reset</button>
+  <button type="button" ng-click="clear()">clear</button>
   <div class='form-group'>
     <label>localStorage -s2g_users</label>{{isUser}}  
     <input type="text" class="form-control" ng-model='username' name='nameInp'>

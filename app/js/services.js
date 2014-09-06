@@ -76,12 +76,13 @@ stuffAppServices.factory( 'ListService', ['$q', '$http', '$log', 'DbService', 'U
             var key = 's2g_plists';
             var al=JSON.parse(localStorage.getItem(key)) || {};
             var user = UserLS.activeUser();
-            console.log(al[listInfo.lid])
-            if(!al[listInfo.lid]){
-                var list = {lid: listInfo.lid, shops: listInfo.shops, timestamp: 0, items: [], users: [user]}
+            var list= al[listInfo.lid]
+            if(!list){
+                list = {lid: listInfo.lid, shops: listInfo.shops, timestamp: 0, items: [], users: [user]}
                 al[list.lid]=list;
                 localStorage.setItem(key, JSON.stringify(al));
             }
+            return list;
         },   
         setPlist: function(list){
             var key = 's2g_plists'
@@ -91,20 +92,52 @@ stuffAppServices.factory( 'ListService', ['$q', '$http', '$log', 'DbService', 'U
         }, 
         updList: function(list){
             var deferred =$q.defer();
+            this.setClist(list)
+            var instance =this;
             var listInfo = {lid: list.lid, shops: list.shops}
-            console.log('in updList, $rootScope: ' +$rootScope.online)
+            console.log('in updList, $rootScope.online: ' +$rootScope.online)
             if(!$rootScope.online){
-                this.setClist(list)
                 deferred.resolve(list)
             }else{  
-                var c = list;
-                var p = getPlist(listInfo);
-
+                var c, p, s, cts, sts, pts,updItems;
+                c = list;
+                cts = c.timestamp;
+                //console.log(JSON.stringify(c))
+                p = this.getPlist(listInfo);
+                pts = p.timestamp;
+                var url=httpLoc + 'lists/'+listInfo.lid; 
+                $http.get(url).   
+                    success(function(data, status) {
+                        console.log('GET list from server: '+status)
+                        s=data;
+                        sts = s.timestamp
+                        if (sts > pts){ //if server has been updated since prior LS
+                            console.log('merging')
+                            updItems=instance.merge(p.items, c.items, s.items);
+                        } else {
+                            console.log('just sending c ')
+                            updItems=c.items;
+                        }     
+                        p.items = updItems;
+                        p.timestamp = cts;
+                        instance.setPlist(p);
+                        $http.put(url, {timestamp:cts, items: updItems}).
+                            success(function(data, status) {
+                                console.log('PUT updated list on server: ' +status)
+                            }).                
+                            error(function(data, status){
+                                console.log(status)
+                            });
+                         deferred.resolve(p);                                                                      
+                    }).
+                    error(function(data, status){
+                        deferred.reject(data)
+                    });
             }
             return deferred.promise
         },       
         getDefault: function(){
-            var name = UserLS.getLastLive();
+            var name = UserLS.activeUser();
             var dl= UserLS.getDefaultList();
             return dl;
             if(dl){return dl.lid;}           
@@ -481,13 +514,13 @@ stuffAppServices.factory('UserLS', function() {
         },
         getLists: function(){
             var al = this.getAll();
-            var usr = al[al.userList[al.lastLive]]
-            var ret= usr.lists;
+            var usr = al.activeUser
+            var ret= al[usr].lists;
             return ret;
         },
         getDefaultList : function(){
             var al = this.getAll();
-            var usr = al[al.userList[al.lastLive]]
+            var usr =al.activeUser
             var lists= usr.lists;
             var def = usr.defaultList;
             var ret = lists[def];
@@ -496,44 +529,45 @@ stuffAppServices.factory('UserLS', function() {
         },
         getDefaultListInfo: function(){
             var al = this.getAll();
-            var usr = al[al.userList[al.lastLive]]
-            var lists= usr.lists;
-            var lid = usr.defaultLid;
+            var usr = al.activeUser
+            var lists= al[usr].lists;
+            var lid = al[usr].defaultLid;
+
             var res  = lists.filter(function(obj){
                 return obj.lid==lid;
             })
             return res[0];
         },
-        getDefaultListIdx: function(){
+        // getDefaultListIdx: function(){
+        //     var al = this.getAll();
+        //     return al[al.userList[al.activeUser]].defaultList
+        // },
+        // setDefaultList: function(idx){
+        //     var al = this.getAll();
+        //     al[al.userList[al.activeUser]].defaultList= idx
+        //     localStorage.setItem(this.key, JSON.stringify(al));
+        // },
+        setDefaultLid: function(listInfo){
             var al = this.getAll();
-            return al[al.userList[al.lastLive]].defaultList
-        },
-        setDefaultList: function(idx){
-            var al = this.getAll();
-            al[al.userList[al.lastLive]].defaultList= idx
-            localStorage.setItem(this.key, JSON.stringify(al));
-        },
-        setDefaultLid: function(list){
-            var al = this.getAll();
-            al[al.userList[al.lastLive]].defaultLid= list.lid
+            al[al.activeUser].defaultLid= listInfo.lid
             localStorage.setItem(this.key, JSON.stringify(al));
         },        
         pushList: function(list){
             var al = this.getAll();
-            al[al.userList[al.lastLive]].lists.push(list)
+            al[al.userList[al.activeUser]].lists.push(list)
             localStorage.setItem(this.key, JSON.stringify(al));
         },
         updLists: function(lists){
             var al = this.getAll();
-            al[al.userList[al.lastLive]].lists=lists
+            al[al.userList[al.activeUser]].lists=lists
             localStorage.setItem(this.key, JSON.stringify(al));
         },
         updList: function(list){
             var al = this.getAll();
             var lid = list.lid;
-            var oldRem = al[al.userList[al.lastLive]].lists.filter(function(e){return e.lid !==list.lid});
+            var oldRem = al[al.userList[al.activeUser]].lists.filter(function(e){return e.lid !==list.lid});
             oldRem.push(list)
-            al[al.userList[al.lastLive]].lists=oldRem;
+            al[al.userList[al.activeUser]].lists=oldRem;
             localStorage.setItem(this.key, JSON.stringify(al));
             return oldRem;
         },
@@ -576,7 +610,7 @@ stuffAppServices.factory('UserLS', function() {
             //console.log(user.name)
             al.userList.push(user.name)
             al.userList = _.uniq(al.userList)
-            al.lastLive = al.userList.indexOf(user.name)
+            al.activeUser = user.name
             al.regState = regState //'Enter apikey', 'Register' or 'Authenticated or Get token'
             al[user.name]=user 
             localStorage.setItem(this.key, JSON.stringify(al));
@@ -668,11 +702,18 @@ stuffAppServices.factory('AuthService', ['$http', '$q', 'DbService',  function($
 stuffAppServices.factory('DbService', ['$http', '$q', 'UserLS','TokenInterceptor' , function($http, $q, UserLS, TokenInterceptor) {
     return {
         ckIfOnline: function(){
-            console.log('in DbService.ckifonline')
-            $http.get(httpLoc);                      
+            var deferred =$q.defer()
+            $http.get(httpLoc).
+                success(function(data,status){
+                    deferred.resolve(status);
+                }).
+                error(function(data,status){
+                    deferred.reject(status);
+                }); 
+            return deferred.promise;                         
         },          
         updateUser: function(){ 
-            var uname = UserLS.getLastLive()
+            var uname = UserLS.activeUser()
             var url=httpLoc + 'users/'+uname;      
             var deferred = $q.defer();
             $http.get(url, {withCredentials:true}).   
@@ -692,7 +733,7 @@ stuffAppServices.factory('DbService', ['$http', '$q', 'UserLS','TokenInterceptor
             return deferred.promise;
         },
         putUser: function(stuff){
-            var uname = UserLS.getLastLive()
+            var uname = UserLS.activeUser()
             var url=httpLoc + 'users/'+uname;    
             var deferred = $q.defer();
             $http.put(url, stuff ).   
@@ -740,7 +781,7 @@ stuffAppServices.factory('TokenInterceptor', ['$q', '$injector', function ($q, $
         request: function (config) {
             var blankTokens= {userList:[]};
             // var getActiveToken = function(){
-            //     var name = UserLS.getLastLive();
+            //     var name = UserLS.activeUser();
             //     //console.log(name)
             //     var getAll= function(){
             //         //console.log(localStorage)    
@@ -833,12 +874,12 @@ stuffAppServices.factory('TokenService', ['$q', 'UserLS', function ($q, UserLS) 
             return al[name];            
         },
         getActiveToken: function(){
-            var name = UserLS.getLastLive();
+            var name = UserLS.activeUser();
             //console.log(name)
             return this.getToken(name);
         },
         tokenExists: function(){
-            var name = UserLS.getLastLive();
+            var name = UserLS.activeUser();
             //console.log(name==undefined)
             if (typeof name != 'undefined'){
                 //console.log('damn stil here')
@@ -861,7 +902,7 @@ stuffAppServices.factory('TokenService', ['$q', 'UserLS', function ($q, UserLS) 
             localStorage.setItem(this.key, JSON.stringify(al));
         },
         deleteActiveToken: function(){
-            var name = UserLS.getLastLive();
+            var name = UserLS.activeUser();
             this.delUserToken(name);
         }
     };

@@ -58,8 +58,9 @@ StuffApp.run(function(DbService, $window, $rootScope){
   $rootScope.online=false;
   $rootScope.status=0;
   //DbService.ckIfOnline();
-  var onFocus = function(){
-    DbService.ckIfOnline();
-  }
-  $window.onfocus = onFocus;
+  // var onFocus = function(){
+  //   console.log('app focus')
+  //   DbService.ckIfOnline();
+  // }
+  // $window.onfocus = onFocus;
 })

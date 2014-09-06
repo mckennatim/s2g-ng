@@ -185,13 +185,27 @@ stuffAppControllers.controller('IsregCtrl', function (TokenService, $state) {
     }    
 });
 
-stuffAppControllers.controller('ListsCtrl', ['$scope', '$state', 'TokenService', 'UserLS', 'ListService', 'DbService', '$rootScope', function ($scope, $state, TokenService, UserLS, ListService, DbService, $rootScope) {
+stuffAppControllers.controller('ListsCtrl', ['$scope', '$state', 'TokenService', 'UserLS', 'ListService', 'DbService', '$rootScope', '$window', function ($scope, $state, TokenService, UserLS, ListService, DbService, $rootScope, $window) {
     if (TokenService.tokenExists()){
+        /*------setup------*/
         console.log('in Lists ctrl');
         var userName;
         $scope.listsInput=''
         $scope.templ = 'partials/shops.html';        
-        var online = $rootScope.online = false ;
+        var online = $rootScope.online = false ;   
+        DbService.ckIfOnline();  
+        userName=$scope.userName = UserLS.activeUser();
+        $scope.lists= UserLS.getLists(); 
+        /*-------event driven-------*/
+        var onFocus = function(){
+            console.log('focused')
+            DbService.ckIfOnline();
+        }
+        $window.onfocus = onFocus;           
+        $scope.goList = function(listInfo){
+            UserLS.setDefaultLid(listInfo);
+            $state.go('list');
+        };
         $rootScope.$watch('online', function(newValue, oldValue){
             if (newValue !== oldValue) {
                 online=$scope.online=newValue;
@@ -202,13 +216,7 @@ stuffAppControllers.controller('ListsCtrl', ['$scope', '$state', 'TokenService',
                     });
                 }                
             }                       
-        });       
-        userName=$scope.userName = UserLS.activeUser();
-        $scope.lists= UserLS.getLists(); 
-        $scope.goList = function(listInfo){
-            UserLS.setDefaultLid(listInfo);
-            $state.go('list');
-        };
+        });         
         $scope.add = function(){
             if ($scope.shops) {
                 console.log($scope.shops)
@@ -279,34 +287,60 @@ stuffAppControllers.controller('ListsCtrl', ['$scope', '$state', 'TokenService',
 
 stuffAppControllers.controller('ListCtrl', ['$scope', '$state', '$filter',  '$interval', '$window', 'ListService', 'TokenService', 'UserLS', 'DbService', '$rootScope', function ($scope, $state, $filter, $interval, $window, ListService, TokenService, UserLS, DbService, $rootScope) {
     if (TokenService.tokenExists()){
+        /*----------setup----------------*/
         console.log('in list ctrl')
-        var lid, list, clist, listInfo, items, online, userName;
+        var lid, list, clist, listInfo, items, online, userName, init;
+        var filter =$filter('filter');
         $scope.items=[];
-        $scope.shops= UserLS.getLists();         
-        listInfo= $scope.currentShop = UserLS.getDefaultListInfo();
-        $scope.currentShop=$scope.shops[$scope.shops.map(function(e){return e.shops}).indexOf($scope.currentShop.shops)];//wtf: http://embed.plnkr.co/8JT8foXgE4qo9smvSv1t/preview
-        console.log($scope.currentShop)
         online= $scope.online=$rootScope.online=false;
         DbService.ckIfOnline();
+        /*---------init------------------*/
+        init = function(){
+            $scope.shops= UserLS.getLists();   
+            listInfo= $scope.currentShop = UserLS.getDefaultListInfo();
+            $scope.currentShop=$scope.shops[$scope.shops.map(function(e){return e.shops}).indexOf($scope.currentShop.shops)];//wtf: http://embed.plnkr.co/8JT8foXgE4qo9smvSv1t/preview
+            userName = UserLS.activeUser();
+            list=ListService.getClist(listInfo);
+            ListService.updList(list).then(function(result){
+                $scope.items=result.items;
+            })        
+        }
+        init();
+        /*----------event driven----------*/
+        $scope.onFocus = function(){
+            console.log('focused')
+            DbService.ckIfOnline().then(function(result){
+                console.log(result);
+                if($rootScope.online){
+                    console.log('focused and online')
+                    ListService.updList(list).then(function(result){
+                        $scope.items=result.items;
+                    });                
+                }                
+            })
+        }
+        $window.onfocus = $scope.onFocus;        
         $rootScope.$watch('online', function(newValue, oldValue){
             if (newValue !== oldValue) {
                 console.log('$rootScope changed to: '+newValue)
                 online=$scope.online=newValue; 
+                ListService.updList(list).then(function(result){
+                    $scope.items=result.items;
+                });
             }
         });     
-        userName = UserLS.activeUser();
-        list=ListService.getClist(listInfo);
-        ListService.updList(list).then(function(result){
-            $scope.items=result.items;
-            $scope.$watch('items', function(newValue,oldValue){
-                if(newValue!== oldValue){
-                    console.log('watch $scope.items changed');
-                    ListService.updList(list).then(function(result){
-                        $scope.items=result.items;
-                    });
-                }
-            })
-        })
+        $scope.$watch('items', function(newValue,oldValue){
+            $scope.cnt=filter($scope.items, ({done: false})).length;
+            if(newValue!== oldValue){
+                console.log('watch $scope.items changed');
+                list.items = $scope.items;
+                list.timestamp = Date.now();
+                //console.log(JSON.stringify(list))
+                ListService.updList(list).then(function(result){
+                    $scope.items=result.items;
+                });
+            }
+        },true );   /*----!important----*/
         $scope.switch=function(shop){
             listInfo=shop;
             UserLS.setDefaultLid(listInfo);
@@ -314,6 +348,21 @@ stuffAppControllers.controller('ListCtrl', ['$scope', '$state', '$filter',  '$in
             $scope.items=list.items;
             console.log(shop)
         }
+        $scope.query='';
+        $scope.rubmit = function(){
+            if ($scope.query) {
+                console.log($scope.query)
+                $scope.items.push({product:this.query, done:false});
+                console.log($scope.items);
+                $scope.query = '';
+             }
+        };
+        $scope.remove= function(item){
+            console.log(item.product);
+            var idx = $scope.items.indexOf(item);
+            $scope.items.splice(idx,1);
+            console.log(idx);
+        };
     } else{
         UserLS.setRegState('Get token');
         $state.go('register');
@@ -643,11 +692,15 @@ stuffAppControllers.controller('AdminCtrl', ['$scope', 'UserLS',  'TokenService'
     $scope.delL = function(){
         $scope.outputL=TokenService.delUserToken($scope.usernameT);
         $scope.userL='';
-    };    
+    };  
+    $scope.reset= function(){
+        localStorage.setItem('s2g_clists', JSON.stringify(lists)); 
+        localStorage.setItem('s2g_users', JSON.stringify(users)); 
+    }; 
+    $scope.clear= function(){
+        localStorage.clear()
+    }; 
+    var lists ={"Jutebi":{"lid":"Jutebi","shops":"groceries","timestamp":1395763172175,"items":[{"product":"banana","done":false,"tags":[],"amt":{}},{"product":"coffee","done":false,"tags":[],"amt":{}},{"product":"apples","done":true,"tags":["produce"],"amt":{"qty":3,"unit":"3lb bag"}},{"product":"milk","done":false,"tags":["orgainic","dairy"],"amt":{"qty":1,"unit":"1/2 gal"}},{"product":"butter","done":false,"tags":[],"amt":{}},{"product":"teff flour","done":true,"tags":[],"amt":{}}],"stores":[{"id":"s_Bereti","name":"Stop&Shop"}],"users":["tim"]},"Guvupa":{"lid":"Guvupa","shops":"groceries","timestamp":1395763172175,"items":[],"users":[]},"Kidoju":{"lid":"Kidoju","shops":"hardware","timestamp":1395763172175,"items":[{"product":"duck tape","done":false,"tags":[],"amt":{}},{"product":"duck tape","done":false,"tags":[],"amt":{}},{"product":"screws","done":false,"tags":[],"amt":{}},{"product":"fuzz balls","done":true,"tags":[],"amt":{}}],"users":["tim7","tim"]},"Woduvu": {"lid":"Woduvu","shops":"drugs","timestamp":1395763172175,"items":[],"users":[]}}    
+    var users = {"activeUser":"tim","regState":"Authenticated","regMessage":"all set you are authorized and have token","userList":["tim"],"tim":{"_id":"5403d1921bc51d0c0aab879b","apikey":"Natacitipavuwunexelisaci","defaultLid":"Jutebi","email":"mckenna.tim@gmail.com","id":1,"lists":[{"lid":"Jutebi","shops":"groceries"},{"lid":"Kidoju","shops":"hardware"}],"name":"tim","role":"admin","timestamp":1409667265319}}
 }]);
 
-        // ListService.updateList(lid).then(function(data){
-
-        // }, function(data){
-
-        // });
