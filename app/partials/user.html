@@ -1,6 +1,22 @@
-<div class="bkg-user">
 
-</br></br></br></br><p>Hey {{dog}}, this is the partial for user.html</p>
-
+<div class="bkg-user col1" ng-click="update()">
 	
+
+</br></br></br>
+<p>
+	<span class="glyphicon glyphicon-signal" ng-show="online"></span>
+	<span class="glyphicon glyphicon-ban-circle" ng-show="!online"></span>
+	Hey {{users.al.activeUser}} {{message}}
+</p>
+<div>
+	<ul class="list-group">
+		<li ng-repeat="user in users.al.userList track by $index" class="list-group-item lists" ng-class="{editing: list==editedList}"  ng-click="makeActive(user)"> 
+			<span>
+				<span ng-click="makeActive(user)" class="list-name">{{user}}</span><br>
+			</span>			 	 
+		</li>
+	</ul>
 </div>
+</div>
+
+

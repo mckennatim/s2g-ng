@@ -128,7 +128,7 @@ stuffAppControllers.controller('RegisterCtrl', ['$scope', '$http', 'AuthService'
             console.log(data)
             var userls = UserLS.getUser($scope.username);
             if (userls){
-                UserLS.setLastLive($scope.username);
+                UserLS.setActiveUser($scope.username);
                 console.log(userls)
                 $scope.email=userls.email;
                 $scope.apikey=userls.apikey;
@@ -162,7 +162,7 @@ stuffAppControllers.controller('RegisterCtrl', ['$scope', '$http', 'AuthService'
                 $scope.apikey = '';
             } else if (data.token.length>40){  
                 //$scope.state=UserLS.getRegState(); 
-                UserLS.setLastLive(name);
+                UserLS.setActiveUser(name);
                 TokenService.setToken(name, data.token);
                 DbService.updateUser();
                 $scope.message = UserLS.setRegMessage('authenticated, token received');
@@ -185,17 +185,26 @@ stuffAppControllers.controller('IsregCtrl', function (TokenService, $state) {
     }    
 });
 
-stuffAppControllers.controller('ListsCtrl', ['$scope', '$state', 'TokenService', 'UserLS', 'ListService', 'DbService', '$rootScope', '$window', function ($scope, $state, TokenService, UserLS, ListService, DbService, $rootScope, $window) {
+stuffAppControllers.controller('ListsCtrl', ['$scope', '$state', 'TokenService', 'UserLS', 'ListService', 'DbService', '$rootScope', '$window', 'Users', 'Lists', function ($scope, $state, TokenService, UserLS, ListService, DbService, $rootScope, $window, Users, Lists) {//must be in same order
     if (TokenService.tokenExists()){
         /*------setup------*/
         console.log('in Lists ctrl');
         var userName;
         $scope.listsInput=''
-        $scope.templ = 'partials/shops.html';        
+        $scope.templUser = 'partials/user.html';        
         var online = $rootScope.online = false ;   
         DbService.ckIfOnline();  
-        userName=$scope.userName = UserLS.activeUser();
-        $scope.lists= UserLS.getLists(); 
+        $scope.lists = Lists;
+        $scope.users = Users;
+        $scope.active = Users.al.activeUser;
+        $scope.makeActive=function(name){
+            Users.makeActive(name);
+        }
+        $scope.makeDefListInfo =function(def){
+            Users.makeDefLid(def.lid);
+        }        
+        // userName=$scope.userName = UserLS.activeUser();
+        // $scope.lists= UserLS.getLists(); 
         /*-------event driven-------*/
         var onFocus = function(){
             console.log('focused')
@@ -206,163 +215,207 @@ stuffAppControllers.controller('ListsCtrl', ['$scope', '$state', 'TokenService',
             UserLS.setDefaultLid(listInfo);
             $state.go('list');
         };
-        $rootScope.$watch('online', function(newValue, oldValue){
-            if (newValue !== oldValue) {
-                online=$scope.online=newValue;
-                if(newValue){
-                    console.log('$rootScope.online changed to: '+$rootScope.online )
-                    DbService.updateUser().then(function(){
-                        $scope.lists= UserLS.getLists();
-                    });
-                }                
-            }                       
-        });         
-        $scope.add = function(){
-            if ($scope.listsInput) {
-                console.log($scope.listsInput)
-                ListService.addList($scope.listsInput).then(function(data){
-                    if (data==undefined){
-                        console.log(data);
-                        $scope.message=', either you or the server is offline, try later.'
-                    }else{
-                        $scope.lists.push(data)
-                        console.log(JSON.stringify($scope.lists))
-                        UserLS.updLists($scope.lists);                     
-                    }
-                },function(data){
-                    console.log(data);
-                });
-                $scope.listsInput = '';
-             }
-        };  
+        // $rootScope.$watch('online', function(newValue, oldValue){
+        //     if (newValue !== oldValue) {
+        //         online=$scope.online=newValue;
+        //         if(newValue){
+        //             console.log('$rootScope.online changed to: '+$rootScope.online )
+        //             DbService.updateUser().then(function(){
+        //                 $scope.lists= UserLS.getLists();
+        //             });
+        //         }                
+        //     }                       
+        // });         
+        // $scope.add = function(){
+        //     if ($scope.listsInput) {
+        //         console.log($scope.listsInput)
+        //         ListService.addList($scope.listsInput).then(function(data){
+        //             if (data==undefined){
+        //                 console.log(data);
+        //                 $scope.message=', either you or the server is offline, try later.'
+        //             }else{
+        //                 $scope.lists.push(data)
+        //                 console.log(JSON.stringify($scope.lists))
+        //                 UserLS.updLists($scope.lists);                     
+        //             }
+        //         },function(data){
+        //             console.log(data);
+        //         });
+        //         $scope.listsInput = '';
+        //      }
+        // };  
 
-        $scope.remove = function(list){
-            console.log(list)
-            alert('Are you sure you want to resign from this list?')
-            ListService.delList(list.lid).then(function(data){
-                console.log(data);
-                DbService.updateUser().then(function(){
-                    $scope.lists= UserLS.getLists();
-                    $scope.originalItem = angular.extend({}, list);
-                });
-            })
-        };
-        $scope.edit =function(list){
-            $scope.editedList=list;
-            $scope.originalItem = angular.extend({}, list);
-            if(!UserLS.serverIsOnline()){
-                $scope.message=', either you or server are offline, update later';
-                $scope.revertEdit(list);
-            }
-        };
-        $scope.revertEdit = function(list){
-            console.log('escaped into revertEdit')
-            $scope.lists[$scope.lists.indexOf(list)] = $scope.originalItem;
-            $scope.doneEditing($scope.originalItem);           
-        };
-        $scope.doneEditing = function(list){
-            console.log('in doneEditing')
-            $scope.editedList = null;
-            list.shops = list.shops.trim();
-            var lists = UserLS.updList(list);
-            var stuff = {$set: {lists: lists}};
-            DbService.putUser(stuff);
-        };        
-        $scope.join = function(){
-            console.log($scope.listsInput)
-             if ($scope.listsInput) {
-                ListService.joinList($scope.listsInput).then(function(data){
-                    console.log(data);
-                    DbService.updateUser().then(function(){
-                        $scope.lists= UserLS.getLists();
-                    });
-                });                
-            }
-        }        
+        // $scope.remove = function(list){
+        //     console.log(list)
+        //     alert('Are you sure you want to resign from this list?')
+        //     ListService.delList(list.lid).then(function(data){
+        //         console.log(data);
+        //         DbService.updateUser().then(function(){
+        //             $scope.lists= UserLS.getLists();
+        //             $scope.originalItem = angular.extend({}, list);
+        //         });
+        //     })
+        // };
+        // $scope.edit =function(list){
+        //     $scope.editedList=list;
+        //     $scope.originalItem = angular.extend({}, list);
+        //     if(!UserLS.serverIsOnline()){
+        //         $scope.message=', either you or server are offline, update later';
+        //         $scope.revertEdit(list);
+        //     }
+        // };
+        // $scope.revertEdit = function(list){
+        //     console.log('escaped into revertEdit')
+        //     $scope.lists[$scope.lists.indexOf(list)] = $scope.originalItem;
+        //     $scope.doneEditing($scope.originalItem);           
+        // };
+        // $scope.doneEditing = function(list){
+        //     console.log('in doneEditing')
+        //     $scope.editedList = null;
+        //     list.shops = list.shops.trim();
+        //     var lists = UserLS.updList(list);
+        //     var stuff = {$set: {lists: lists}};
+        //     DbService.putUser(stuff);
+        // };        
+        // $scope.join = function(){
+        //     console.log($scope.listsInput)
+        //      if ($scope.listsInput) {
+        //         ListService.joinList($scope.listsInput).then(function(data){
+        //             console.log(data);
+        //             DbService.updateUser().then(function(){
+        //                 $scope.lists= UserLS.getLists();
+        //             });
+        //         });                
+        //     }
+        // }        
     } else{
         UserLS.setRegState('Get token');
         $state.go('register');
     }
 }]);
 
-stuffAppControllers.controller('ListCtrl', ['$scope', '$state', '$filter',  '$interval', '$window', 'ListService', 'TokenService', 'UserLS', 'DbService', '$rootScope', function ($scope, $state, $filter, $interval, $window, ListService, TokenService, UserLS, DbService, $rootScope) {
+stuffAppControllers.controller('ListCtrl', ['$scope', '$state', '$filter',  '$interval', '$window', 'ListService', 'TokenService', 'UserLS', 'DbService', '$rootScope', 'Lists', 'Users', function ($scope, $state, $filter, $interval, $window, ListService, TokenService, UserLS, DbService, $rootScope, Lists, Users) {
     if (TokenService.tokenExists()){
         /*----------setup----------------*/
         console.log('in list ctrl')
         var lid, list, clist, listInfo, items, online, userName, init;
         var filter =$filter('filter');
+        $scope.templLists = 'partials/lists.html'; 
         $scope.items=[];
         online= $scope.online=$rootScope.online=false;
         DbService.ckIfOnline();
-        /*---------init------------------*/
-        init = function(){
-            $scope.shops= UserLS.getLists();   
-            listInfo= $scope.currentShop = UserLS.getDefaultListInfo();
-            $scope.currentShop=$scope.shops[$scope.shops.map(function(e){return e.shops}).indexOf($scope.currentShop.shops)];//wtf: http://embed.plnkr.co/8JT8foXgE4qo9smvSv1t/preview
-            userName = UserLS.activeUser();
-            list=ListService.getClist(listInfo);
-            ListService.updList(list).then(function(result){
-                $scope.items=result.items;
-            })        
+        $scope.lists = Lists;
+        $scope.users = Users;
+        $scope.makeActive=function(name){
+            Users.makeActive(name);
         }
-        init();
-        /*----------event driven----------*/
-        $scope.onFocus = function(){
-            console.log('focused')
-            DbService.ckIfOnline().then(function(result){
-                console.log(result);
-                if($rootScope.online){
-                    console.log('focused and online')
-                    ListService.updList(list).then(function(result){
-                        $scope.items=result.items;
-                    });                
-                }                
-            })
+        $scope.makeDefListInfo =function(def){
+            Users.makeDefLid(def.lid);
         }
-        $window.onfocus = $scope.onFocus;        
-        $rootScope.$watch('online', function(newValue, oldValue){
-            if (newValue !== oldValue) {
-                console.log('$rootScope changed to: '+newValue)
-                online=$scope.online=newValue; 
-                ListService.updList(list).then(function(result){
-                    $scope.items=result.items;
-                });
-            }
-        });     
-        $scope.$watch('items', function(newValue,oldValue){
-            $scope.cnt=filter($scope.items, ({done: false})).length;
+        $scope.editBuffer={} 
+        /*----------event driven----------*/ 
+        $scope.$watch('lists', function(newValue,oldValue){
+            $scope.cnt=filter($scope.lists.lal[$scope.lists.lal.activeList].items, ({done: false})).length;
             if(newValue!== oldValue){
                 console.log('watch $scope.items changed');
-                list.items = $scope.items;
-                list.timestamp = Date.now();
-                //console.log(JSON.stringify(list))
-                ListService.updList(list).then(function(result){
-                    $scope.items=result.items;
-                });
+                Lists.saveLists();
             }
-        },true );   /*----!important----*/
-        $scope.switch=function(shop){
-            listInfo=shop;
-            UserLS.setDefaultLid(listInfo);
-            list=ListService.getClist(listInfo);
-            $scope.items=list.items;
-            console.log(shop)
-        }
-        $scope.query='';
+        },true );   /*----!important----*/ 
+        $scope.editItem = function(item){
+            console.log(item)
+            $scope.editedItem= item;
+            $scope.buffer = JSON.parse(JSON.stringify(item));
+            console.log($scope.buffer)
+        };
+        $scope.doneEditing = function(buffer){
+            console.log('in doneEditing')  
+            console.log(buffer)         
+            $scope.editedItem.product = buffer.product.trim();
+            if(buffer.loc){$scope.editedItem.loc = buffer.loc.trim();}
+            if(buffer.tags){$scope.editedItem.tags = buffer.tags.trim();}
+            if (buffer.amt){
+                if(buffer.amt.qty){$scope.editedItem.amt.qty = buffer.amt.qty.trim()};
+                if(buffer.amt.unit){$scope.editedItem.amt.unit = buffer.amt.unit.trim()};                
+            }
+            if (!buffer.product) {
+                $scope.remove($scope.editedItem);
+            } 
+            console.log($scope.editedItem)
+            $scope.editedItem = null;
+        };
+        $scope.revertEdit = function(item){
+            console.log('escaped into revertEdit')
+            $scope.editedItem = null;
+            //items[items.indexOf(item)] = $scope.originalItem;
+            //$scope.doneEditing($scope.originalItem);           
+        };                 
         $scope.rubmit = function(){
             if ($scope.query) {
-                console.log($scope.query)
-                $scope.items.push({product:this.query, done:false});
-                console.log($scope.items);
+                $scope.lists.lal[$scope.lists.lal.activeList].items.push({product:this.query, done:false});
                 $scope.query = '';
              }
         };
         $scope.remove= function(item){
-            console.log(item.product);
-            var idx = $scope.items.indexOf(item);
-            $scope.items.splice(idx,1);
-            console.log(idx);
-        };
+            var idx = $scope.lists.lal[$scope.lists.lal.activeList].items.indexOf(item);
+            $scope.lists.lal[$scope.lists.lal.activeList].items.splice(idx,1);
+        };                            
+        // /*---------init------------------*/
+        // init = function(){
+        //     //$scope.shops= UserLS.getLists();   
+        //     listInfo= $scope.currentShop = UserLS.getDefaultListInfo();
+        //     $scope.currentShop=$scope.shops[$scope.shops.map(function(e){return e.shops}).indexOf($scope.currentShop.shops)];//wtf: http://embed.plnkr.co/8JT8foXgE4qo9smvSv1t/preview
+        //     userName = UserLS.activeUser();
+        //     list=ListService.getClist(listInfo);
+        //     ListService.updList(list).then(function(result){
+        //         $scope.items=result.items;
+        //     })        
+        // }
+        // init();
+        // /*----------event driven----------*/
+        // $scope.onFocus = function(){
+        //     console.log('focused')
+        //     DbService.ckIfOnline().then(function(result){
+        //         console.log(result);
+        //         if($rootScope.online){
+        //             console.log('focused and online')
+        //             ListService.updList(list).then(function(result){
+        //                 $scope.items=result.items;
+        //             });                
+        //         }                
+        //     })
+        // }
+        // $window.onfocus = $scope.onFocus;        
+        // $rootScope.$watch('online', function(newValue, oldValue){
+        //     if (newValue !== oldValue) {
+        //         console.log('$rootScope changed to: '+newValue)
+        //         online=$scope.online=newValue; 
+        //         ListService.updList(list).then(function(result){
+        //             $scope.items=result.items;
+        //         });
+        //     }
+        // });     
+        // $scope.switch=function(shop){
+        //     listInfo=shop;
+        //     UserLS.setDefaultLid(listInfo);
+        //     list=ListService.getClist(listInfo);
+        //     $scope.items=list.items;
+        //     console.log(shop)
+        // }
+        // $scope.query='';
+        // $scope.rubmit = function(){
+        //     if ($scope.query) {
+        //         console.log($scope.query)
+        //         $scope.items.push({product:this.query, done:false});
+        //         console.log($scope.items);
+        //         $scope.query = '';
+        //      }
+        // };
+        // $scope.remove= function(item){
+        //     console.log(item.product);
+        //     var idx = $scope.items.indexOf(item);
+        //     $scope.items.splice(idx,1);
+        //     console.log(idx);
+        // };
     } else{
         UserLS.setRegState('Get token');
         $state.go('register');
@@ -633,14 +686,42 @@ stuffAppControllers.controller('ListCtrl', ['$scope', '$state', '$filter',  '$in
 //     }
 // }]);
 
-stuffAppControllers.controller('UserCtrl', ['$scope', 'DbService',  function ($scope, DbService) {
-    $scope.dog = 'petey';
-    DbService.updateUser();
-
+stuffAppControllers.controller('UserCtrl', ['$scope', 'DbService', 'TokenService', 'UserLS', 'Users', 'Lists', function ($scope, DbService,TokenService, UserLS, Users,Lists) {
+    if (TokenService.tokenExists()){
+        console.log('in UserCtrl')
+        $scope.lists = Lists;
+        $scope.users= Users;
+        $scope.active = Users.al.activeUser;
+        $scope.makeActive=function(name){
+            Users.makeActive(name);
+        }
+        $scope.makeDefListInfo =function(def){
+            Users.makeDefLid(def.lid); 
+        }        
+        // $scope.templUser = 'partials/user.html';    
+        // $scope.state = UserLS.setRegState('Authenticated');
+        // $scope.message=UserLS.setRegMessage(message);
+        // $scope.users= UserLS.getUsers();
+        // console.log($scope.users)
+        // */------------events------------*/
+        // $scope.makeActive = function(user){
+        //     UserLS.setActiveUser(user);
+        //     console.log(user)
+        // }
+    } else {
+         var message = 'you seem to be lacking a token';
+    }   
 }]);
 
-stuffAppControllers.controller('TemplCtrl', ['$scope', 'DbService',  function ($scope, DbService) {
-    $scope.dog = 'petey';
+stuffAppControllers.controller('TemplCtrl', ['$scope', 'DbService', 'TokenService', 'UserLS', function ($scope, DbService, TokenService, UserLS) {
+    if (TokenService.tokenExists()){
+        var message = 'all set you are authorized and have token';
+        $scope.state = UserLS.setRegState('Authenticated');
+        $scope.message=UserLS.setRegMessage(message);
+    } else {
+         var message = 'you seem to be lacking a token';
+        $scope.message=UserLS.setRegMessage(message);
+    }    
 }]);
 stuffAppControllers.controller('ShopsCtrl', ['$scope', 'DbService', 'UserLS', '$rootScope',function ($scope, DbService, UserLS, $rootScope) {
     $scope.dog = 'fritz';

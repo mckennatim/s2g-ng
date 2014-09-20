@@ -3,8 +3,12 @@
 
 	<div class="top-spc">
 		<span class="btn-group btn-group-xs list-btn" >
-			<span>
-			 	<select ng-model="currentShop" ng-options="shop.shops for shop in shops" ng-click="switch(currentShop)"></select></span>
+	        <button type="button" class="btn btn-primary dropdown-toggle" ng-disabled="disabled">
+	          Lists <span class="caret"></span>
+	        </button>
+	        <ul class="dropdown-menu" role="menu">
+	          <li ng-repeat="list in users.al[users.al.activeUser].lists  track by $index" ng-click="makeDefListInfo(list)"><a href="#">{{list.shops}}</a></li>
+	        </ul>
 			 <span>
 			 	<select ng-model="currentStore" ng-options="store.name for store in stores" ng-click="order()"></select>
 			 </span>
@@ -17,8 +21,9 @@
 		</span>
 		<span class="glyphicon glyphicon-signal" ng-show="online"></span>
 		<span class="glyphicon glyphicon-ban-circle" ng-show="!online"></span>
+		<span>{{users.al.activeUser}}</span>
 		<ul class="list group" >
-			<li ng-repeat="item in items | filter:{done:false} track by $index" class="list-group-item need"
+			<li ng-repeat="item in lists.lal[lists.lal.activeList].items | filter:{done:false} track by $index" class="list-group-item need"
 			ng-class="{editing: item==editedItem}" >
 			<div class="view" >
 					<input type="checkbox" ng-model="item.done" ng-click="item.amt.qty=''">
@@ -32,13 +37,13 @@
 				<i ng-click="remove(item)" class="delx glyphicon glyphicon-remove " ></i>  			
 			</div>
 			<div class="edit">
-				<form ng-submit="doneEditing(item)" accept-charset="utf-8">
-					<input ng-trim="false" ng-model="item.product" item-escape="revertEdit(item)" 
-						size="18" ng-blur="doneEditing(item)" placeholder="product" >
-					<input ng-trim="false" ng-model="item.amt.qty" item-escape="revertEdit(item)" size="2" placeholder="qty" >
-					<input ng-trim="false" ng-model="item.amt.unit" item-escape="revertEdit(item)" size="4" placeholder="unit" >
-					<input ng-trim="false" ng-model="item.loc" item-escape="revertEdit(item)" size="8"  placeholder="aisle" >
-					<input ng-trim="true" ng-model="item.tags" ng-list item-escape="revertEdit(item)" size="15" placeholder="tags" >
+				<form ng-submit="doneEditing(buffer)" accept-charset="utf-8">
+					<input ng-trim="true" ng-model="buffer.product" item-escape="revertEdit(buffer)" 
+						size="18" ng-blur="doneEditing(buffer)" placeholder="product" >
+					<input ng-trim="true" ng-model="buffer.amt.qty" item-escape="revertEdit(buffer)" size="2" placeholder="qty" >
+					<input ng-trim="true" ng-model="buffer.amt.unit" item-escape="revertEdit(buffer)" size="4" placeholder="unit" >
+					<input ng-trim="true" ng-model="buffer.loc" item-escape="revertEdit(buffer)" size="8"  placeholder="aisle" >
+					<input ng-trim="true" ng-model="buffer.tags" ng-list item-escape="revertEdit(buffer)" size="15" placeholder="tags" >
 					<input class="submit" type="submit" id="submit2" value="Upd" />
 				</form>
 			</div>
@@ -51,7 +56,7 @@
 		</form>
 		<span class="got-list-head">from old lists</span> 
 		<ul class="list group" >
-			<li ng-repeat="got in items | filter:{done:true} | filter:query track by $id($index)" class="list-group-item need">
+			<li ng-repeat="got in lists.lal[lists.lal.activeList].items | filter:{done:true} | filter:query track by $id($index)" class="list-group-item need">
 				<input class="ck-box" type="checkbox" ng-model="got.done">
 				<span class="done-{{got.done}} product">{{got.product}}</span>
 				<i ng-click="remove(got)" class="pull-right glyphicon glyphicon-remove " ></i>  
@@ -74,4 +79,5 @@
 	<p>{{timestamp}} </p>
 </div>
 </div>
-<!-- <div ng-include="templ3" ng-controller="ListsCtrl"></div> -->
+<div ng-include="templLists" ng-controller="ListsCtrl"></div>
+<!-- <div ng-include="templUser" ng-controller="UserCtrl"></div> -->-----------------------------------

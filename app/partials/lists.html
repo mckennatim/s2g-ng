@@ -1,27 +1,33 @@
 
 <div class="bkg-lists col1" ng-click="update()">
-	
+
 
 </br></br></br>
-<p>
+<div class="btn-group btn-group-xs" dropdown is-open="status.isopen">
 	<span class="glyphicon glyphicon-signal" ng-show="online"></span>
 	<span class="glyphicon glyphicon-ban-circle" ng-show="!online"></span>
-	Hey {{userName}} {{message}}
-</p>
+      <button type="button" class="btn btn-primary dropdown-toggle" ng-disabled="disabled">
+        Users <span class="caret"></span>
+      </button>
+      <ul class="dropdown-menu" role="menu">
+        <li ng-repeat="user in users.al.userList  track by $index" ng-click="makeActive(user)"><a href="#">{{user}}</a></li>
+      </ul>	
+	Hey {{users.al.activeUser}} {{message}}
+</div>
 <div>
 	<ul class="list-group">
-		<li ng-repeat="list in lists track by $index" class="list-group-item lists" ng-class="{editing: list==editedList}" > 
-				<i ng-click="edit(list)" class="delx glyphicon glyphicon-pencil " ng-show="online"></i> 
-				<span class="view">
-					<span ng-click="goList(list)" class="list-name">{{list.shops}}</span><br>
-				</span>			 
-				<span class="edit">
-					<form ng-submit="doneEditing(list)" accept-charset="utf-8">
-						<input ng-trim="false" ng-model="list.shops" item-escape="revertEdit(list)" size="18"  ></span>
-					</form>	
-				</span>  		
-				<i ng-click="remove(list)" class="delx glyphicon glyphicon-remove " ng-show="online"></i> 			 
-				<span ng-click="goList($index)" class="list-lid" >repository:{{list.lid}}   </span>			
+		<li ng-repeat="list in users.al[users.al.activeUser].lists track by $index" class="list-group-item lists" ng-class="{editing: list==editedList}" > 
+			<i ng-click="edit(list)" class="delx glyphicon glyphicon-pencil " ng-show="online"></i> 
+			<span class="view">
+				<span ng-click="makeDefListInfo(list)" class="list-name">{{list.shops}}</span><br>
+			</span>			 
+			<span class="edit">
+				<form ng-submit="doneEditing(list)" accept-charset="utf-8">
+					<input ng-trim="false" ng-model="list.shops" item-escape="revertEdit(list)" size="18"  ></span>
+				</form>	
+			</span>  		
+			<i ng-click="remove(list)" class="delx glyphicon glyphicon-remove " ng-show="online"></i> 			 
+			<span ng-click="goList($index)" class="list-lid" >repository:{{list.lid}}   </span>			
 		</li>
 	</ul>
 	<form name='regForm' ng-show="online">
@@ -29,11 +35,8 @@
 			<label><input type="text" name="newList" placeholder="add-list/join-repo" ng-model="listsInput"></label>
 			<a class="label bkg-register" ng-click="add()">Add</a>
 			<a class="label bkg-user" ng-click="join()">Join</a>
- 		</div>
+		</div>
 	</form> 
 </div>
-<!-- <div ng-include="templ" ng-controller="ShopsCtrl"></div> -->
-
 </div>
-
-</div>
+<div ng-include="templUser" ng-controller="UserCtrl"></div>

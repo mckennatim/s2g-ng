@@ -104,7 +104,7 @@
   font-family: "Comic Sans MS", "Trebuchet MS", Helvetica, sans-serif;
 }
 .top-spc {
-  padding-top: 50px;
+  padding-top: 54px;
   padding-left:10px;
 }
 .list-btn{
@@ -155,9 +155,13 @@ li.editing .edit {
   font-size: 12px;
 }
 
-@media all and (min-width: 42em){
+.col1{
+  min-height: 400px;
+}
+
+@media all and (min-width: 36em){
   .col1 { float: left; width:50%; }
 }
 @media all and (min-width: 70em){
-  .col1 { float: left; width:34%; }
+  .col1 { float: left; width:33.3%; }
 }
