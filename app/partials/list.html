@@ -2,16 +2,22 @@
 	<div>
 
 	<div class="top-spc">
-		<span class="btn-group btn-group-xs list-btn" >
+
+		<span class="btn-group btn-group-xs list-btn">
 	        <button type="button" class="btn btn-primary dropdown-toggle" ng-disabled="disabled">
 	          Lists <span class="caret"></span>
 	        </button>
 	        <ul class="dropdown-menu" role="menu">
 	          <li ng-repeat="list in users.al[users.al.activeUser].lists  track by $index" ng-click="makeDefListInfo(list)"><a href="#">{{list.shops}}</a></li>
-	        </ul>
-			 <span>
-			 	<select ng-model="currentStore" ng-options="store.name for store in stores" ng-click="order()"></select>
-			 </span>
+	        </ul>	
+		</span>	
+		<span class="btn-group btn-group-xs list-btn">
+	        <button type="button" class="btn btn-primary dropdown-toggle" ng-disabled="disabled" ng-click="sort()">
+	          SortBy<span class="caret"></span>
+	        </button>
+	        <ul class="dropdown-menu" role="menu">
+	          <li ng-repeat="store in lists.lal[lists.lal.activeList].stores  track by $index" ng-click="orderByStore(store)"><a href="#">{{store.name}}</a></li>
+	        </ul>	
 		</span>
 		<span>({{cnt}})</span> 
 		<span class="btn-group btn-group-xs list-btn" >
@@ -22,6 +28,7 @@
 		<span class="glyphicon glyphicon-signal" ng-show="online"></span>
 		<span class="glyphicon glyphicon-ban-circle" ng-show="!online"></span>
 		<span>{{users.al.activeUser}}</span>
+		<span>{{users.al[users.al.activeUser].defaultLid}}</span>
 		<ul class="list group" >
 			<li ng-repeat="item in lists.lal[lists.lal.activeList].items | filter:{done:false} track by $index" class="list-group-item need"
 			ng-class="{editing: item==editedItem}" >
@@ -37,12 +44,15 @@
 				<i ng-click="remove(item)" class="delx glyphicon glyphicon-remove " ></i>  			
 			</div>
 			<div class="edit">
-				<form ng-submit="doneEditing(buffer)" accept-charset="utf-8">
+				<form ng-submit="doneEditing(buffer)" accept-charset="utf-8" ng-blur="revertEdit(buffer)">
 					<input ng-trim="true" ng-model="buffer.product" item-escape="revertEdit(buffer)" 
 						size="18" ng-blur="doneEditing(buffer)" placeholder="product" >
 					<input ng-trim="true" ng-model="buffer.amt.qty" item-escape="revertEdit(buffer)" size="2" placeholder="qty" >
 					<input ng-trim="true" ng-model="buffer.amt.unit" item-escape="revertEdit(buffer)" size="4" placeholder="unit" >
-					<input ng-trim="true" ng-model="buffer.loc" item-escape="revertEdit(buffer)" size="8"  placeholder="aisle" >
+			        <span>
+			          <select ng-model="buffer.loc" ng-options="name as name for name in stores.st.default.aisles" ng-click=""></select></span>
+			         </span>					
+<!-- 				<input ng-trim="true" ng-model="buffer.loc" item-escape="revertEdit(buffer)" 	size="8"  placeholder="aisle" > -->
 					<input ng-trim="true" ng-model="buffer.tags" ng-list item-escape="revertEdit(buffer)" size="15" placeholder="tags" >
 					<input class="submit" type="submit" id="submit2" value="Upd" />
 				</form>
@@ -80,4 +90,3 @@
 </div>
 </div>
 <div ng-include="templLists" ng-controller="ListsCtrl"></div>
-<!-- <div ng-include="templUser" ng-controller="UserCtrl"></div> -->-----------------------------------

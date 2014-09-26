@@ -190,7 +190,7 @@ stuffAppControllers.controller('ListsCtrl', ['$scope', '$state', 'TokenService',
         /*------setup------*/
         console.log('in Lists ctrl');
         var userName;
-        $scope.listsInput=''
+        //$scope.listsInput='dog';
         $scope.templUser = 'partials/user.html';        
         var online = $rootScope.online = false ;   
         DbService.ckIfOnline();  
@@ -202,30 +202,80 @@ stuffAppControllers.controller('ListsCtrl', ['$scope', '$state', 'TokenService',
         }
         $scope.makeDefListInfo =function(def){
             Users.makeDefLid(def.lid);
+            $state.go('list');
         }        
-        // userName=$scope.userName = UserLS.activeUser();
-        // $scope.lists= UserLS.getLists(); 
         /*-------event driven-------*/
         var onFocus = function(){
             console.log('focused')
-            DbService.ckIfOnline();
+            DbService.ckIfOnline().then(function(status){
+                if (status==200){
+                    console.log('in onFocus about to dBget ')
+                    Users.dBget().then(function(){});
+                }
+                console.log(status)
+            });
         }
         $window.onfocus = onFocus;           
-        $scope.goList = function(listInfo){
-            UserLS.setDefaultLid(listInfo);
-            $state.go('list');
+
+        $rootScope.$watch('online', function(newValue, oldValue){
+            console.log('watched')
+            console.log(newValue)
+            if (newValue !== oldValue) {
+                online=$scope.online=newValue;
+                if(newValue){
+                    console.log('$rootScope.online changed to: '+$rootScope.online )
+                    Users.dBget().then(function(){});
+                }                
+            }                       
+        }); 
+        $scope.join = function(){
+            console.log($scope.listsInput)
+             if ($scope.listsInput) {
+                Users.dBjoin($scope.listsInput).then(function(data){
+                    if (data.message){
+                        $scope.message = data.message;
+                    }else {
+                        $scope.message= ''
+                        console.log(data)
+                    }
+                    $scope.listsInput = ''
+                });                
+            }
+        }
+        $scope.remove = function(list){
+            console.log(list)
+            alert('Are you sure you want to resign from this list?')
+            Users.dBdelList(list.lid).then(function(data){
+                if (data.message){
+                    $scope.message = data.message;
+                }else {
+                    console.log(data)
+                }
+            })
         };
-        // $rootScope.$watch('online', function(newValue, oldValue){
-        //     if (newValue !== oldValue) {
-        //         online=$scope.online=newValue;
-        //         if(newValue){
-        //             console.log('$rootScope.online changed to: '+$rootScope.online )
-        //             DbService.updateUser().then(function(){
-        //                 $scope.lists= UserLS.getLists();
-        //             });
-        //         }                
-        //     }                       
-        // });         
+        $scope.add = function(){
+            if ($scope.listsInput) {
+                console.log($scope.listsInput)
+                ListService.addList($scope.listsInput).then(function(data){
+                    if (data==undefined){
+                        console.log(data);
+                        $scope.message=', either you or the server is offline, try later.'
+                    }else{
+                        $scope.lists.push(data)
+                        console.log(JSON.stringify($scope.lists))
+                        UserLS.updLists($scope.lists);                     
+                    }
+                },function(data){
+                    console.log(data);
+                });
+                $scope.listsInput = '';
+             }
+        };                             
+        // $scope.goList = function(listInfo){
+        //     console.log(listInfo)
+        //     UserLS.setDefaultLid(listInfo);
+        //     $state.go('list');
+        // };            
         // $scope.add = function(){
         //     if ($scope.listsInput) {
         //         console.log($scope.listsInput)
@@ -294,18 +344,18 @@ stuffAppControllers.controller('ListsCtrl', ['$scope', '$state', 'TokenService',
     }
 }]);
 
-stuffAppControllers.controller('ListCtrl', ['$scope', '$state', '$filter',  '$interval', '$window', 'ListService', 'TokenService', 'UserLS', 'DbService', '$rootScope', 'Lists', 'Users', function ($scope, $state, $filter, $interval, $window, ListService, TokenService, UserLS, DbService, $rootScope, Lists, Users) {
+stuffAppControllers.controller('ListCtrl', ['$scope', '$state', '$filter',  '$interval', '$window', 'ListService', 'TokenService', 'UserLS', 'DbService', '$rootScope', 'Lists', 'Users', 'Stores', function ($scope, $state, $filter, $interval, $window, ListService, TokenService, UserLS, DbService, $rootScope, Lists, Users, Stores) {
     if (TokenService.tokenExists()){
         /*----------setup----------------*/
         console.log('in list ctrl')
         var lid, list, clist, listInfo, items, online, userName, init;
         var filter =$filter('filter');
         $scope.templLists = 'partials/lists.html'; 
-        $scope.items=[];
         online= $scope.online=$rootScope.online=false;
         DbService.ckIfOnline();
         $scope.lists = Lists;
         $scope.users = Users;
+        $scope.stores=Stores;
         $scope.makeActive=function(name){
             Users.makeActive(name);
         }
@@ -317,7 +367,7 @@ stuffAppControllers.controller('ListCtrl', ['$scope', '$state', '$filter',  '$in
         $scope.$watch('lists', function(newValue,oldValue){
             $scope.cnt=filter($scope.lists.lal[$scope.lists.lal.activeList].items, ({done: false})).length;
             if(newValue!== oldValue){
-                console.log('watch $scope.items changed');
+                console.log('watch $scope.items changed to' + $rootScope.online );
                 Lists.saveLists();
             }
         },true );   /*----!important----*/ 
@@ -332,10 +382,11 @@ stuffAppControllers.controller('ListCtrl', ['$scope', '$state', '$filter',  '$in
             console.log(buffer)         
             $scope.editedItem.product = buffer.product.trim();
             if(buffer.loc){$scope.editedItem.loc = buffer.loc.trim();}
-            if(buffer.tags){$scope.editedItem.tags = buffer.tags.trim();}
+            console.log(buffer.tags)
+            if(buffer.tags.length>0){$scope.editedItem.tags = buffer.tags;}
             if (buffer.amt){
                 if(buffer.amt.qty){$scope.editedItem.amt.qty = buffer.amt.qty.trim()};
-                if(buffer.amt.unit){$scope.editedItem.amt.unit = buffer.amt.unit.trim()};                
+                if(buffer.amt.unit){$scope.editedItem.amt.unit = buffer.amt.unit.trim()};        
             }
             if (!buffer.product) {
                 $scope.remove($scope.editedItem);
@@ -358,333 +409,41 @@ stuffAppControllers.controller('ListCtrl', ['$scope', '$state', '$filter',  '$in
         $scope.remove= function(item){
             var idx = $scope.lists.lal[$scope.lists.lal.activeList].items.indexOf(item);
             $scope.lists.lal[$scope.lists.lal.activeList].items.splice(idx,1);
-        };                            
-        // /*---------init------------------*/
-        // init = function(){
-        //     //$scope.shops= UserLS.getLists();   
-        //     listInfo= $scope.currentShop = UserLS.getDefaultListInfo();
-        //     $scope.currentShop=$scope.shops[$scope.shops.map(function(e){return e.shops}).indexOf($scope.currentShop.shops)];//wtf: http://embed.plnkr.co/8JT8foXgE4qo9smvSv1t/preview
-        //     userName = UserLS.activeUser();
-        //     list=ListService.getClist(listInfo);
-        //     ListService.updList(list).then(function(result){
-        //         $scope.items=result.items;
-        //     })        
-        // }
-        // init();
-        // /*----------event driven----------*/
-        // $scope.onFocus = function(){
-        //     console.log('focused')
-        //     DbService.ckIfOnline().then(function(result){
-        //         console.log(result);
-        //         if($rootScope.online){
-        //             console.log('focused and online')
-        //             ListService.updList(list).then(function(result){
-        //                 $scope.items=result.items;
-        //             });                
-        //         }                
-        //     })
-        // }
-        // $window.onfocus = $scope.onFocus;        
-        // $rootScope.$watch('online', function(newValue, oldValue){
-        //     if (newValue !== oldValue) {
-        //         console.log('$rootScope changed to: '+newValue)
-        //         online=$scope.online=newValue; 
-        //         ListService.updList(list).then(function(result){
-        //             $scope.items=result.items;
-        //         });
-        //     }
-        // });     
-        // $scope.switch=function(shop){
-        //     listInfo=shop;
-        //     UserLS.setDefaultLid(listInfo);
-        //     list=ListService.getClist(listInfo);
-        //     $scope.items=list.items;
-        //     console.log(shop)
-        // }
-        // $scope.query='';
-        // $scope.rubmit = function(){
-        //     if ($scope.query) {
-        //         console.log($scope.query)
-        //         $scope.items.push({product:this.query, done:false});
-        //         console.log($scope.items);
-        //         $scope.query = '';
-        //      }
-        // };
-        // $scope.remove= function(item){
-        //     console.log(item.product);
-        //     var idx = $scope.items.indexOf(item);
-        //     $scope.items.splice(idx,1);
-        //     console.log(idx);
-        // };
+        };
+        var orderBy = $filter('orderBy');
+        var filter = $filter('filter');  
+        $scope.aisleOrder = function(item){
+            if(!item.loc){
+                return 0 
+            }else {
+                return $scope.stores.st[store.id].aisles.indexOf(item.loc); 
+            }  
+        };              
+        $scope.orderByStore= function(store){
+            var aisleOrder = function(item){
+                if(!item.loc){
+                    return 0 
+                }else {
+                    return  $scope.stores.st[store.id].aisles.indexOf(item.loc);
+                }  
+            };            
+            var items= $scope.lists.lal[$scope.lists.lal.activeList].items;
+            $scope.lists.lal[$scope.lists.lal.activeList].items = orderBy(items, aisleOrder);
+        };
+
+        $scope.reverse = false;
+        $scope.sort = function(){
+            console.log('sorting')
+            var items= $scope.lists.lal[$scope.lists.lal.activeList].items;
+            $scope.lists.lal[$scope.lists.lal.activeList].items = orderBy(items, "product", $scope.reverse);
+            $scope.reverse = !$scope.reverse
+        }
     } else{
         UserLS.setRegState('Get token');
         $state.go('register');
     };   
 }]);
 
-
-
-/*
-        //$scope.lists= UserLS.getLists();
-        var orderBy = $filter('orderBy');
-        var filter = $filter('filter');
-        $scope.showAmt = false;
-        $scope.showLoc = false;
-        $scope.showTags = false;
-        $scope.editedItem = null;
-        //$scope.listIdx= UserLS.getDefaultListIdx();
-        $scope.shops= UserLS.getLists();
-        //console.log(JSON.stringify($scope.shops))
-        //console.log($scope.shops[$scope.listIdx]);
-        //listInfo= $scope.currentShop = $scope.shops[$scope.listIdx];
-        //console.log(JSON.stringify(UserLS.getDefaultListInfo()));
-        lid= listInfo.lid;
-        if (! lid) {
-            console.log('heading to lists')
-            $state.go('lists');
-        } else {
-            console.log('didnt go to lists')
-            list = ListService.getLS(listInfo);
-            items =$scope.items = list.items;
-            console.log(JSON.stringify(list));
-            //$scope.stores= list.stores;
-            var mkt0={"id": "0", "name": "sort-alpha"}
-            var stores=  [
-                    {"id" : "s_Bereti","name" : "Stop&Shop"},
-                    {"id" : "s_Bereto","name" : "WholeFoods"},
-                    {"id" : "s_Bereta","name" : "TraderJoes"}
-            ];
-           var s2g_shops=  {
-              "default": 0,
-              "stores": [
-                "s_Bereti",
-                "s_Bereto",
-                "s_Bereta"
-              ],
-              "s_Bereti": {
-                "name": "Stop&Shop",
-                "aisles": [
-                  "produce",
-                  "nuts",
-                  "seafood",
-                  "cookies",
-                  "cereal",
-                  "canned",
-                  "meats",
-                  "baking",
-                  "snacks",
-                  "paper/plastic",
-                  "cleaning",
-                  "frozen",
-                  "dairy",
-                  "bread"
-                ],
-                "address": "301 Center St, Jamaica Plain, MA 02130",
-                "url": "http://stopandshop.shoplocal.com/stopandshop/default.aspx?action=entry&pretailerid=-99254&siteid=673&storeID=2598877"
-              },
-              "s_Bereto": {
-                "name": "WholeFoods",
-                "aisles": []
-              }
-            }; 
-            // stores.unshift(mkt0);
-            // $scope.stores = stores;
-            // $scope.currentStore=$scope.stores[0];
-            $scope.reverse = true;
-            $scope.order = function() {
-                var needed = filter($scope.items, ({done: false}));
-                var done = filter($scope.items, ({done: true}));
-                console.log($scope.currentStore.id)
-                if($scope.currentStore.id=="0"){
-                    $scope.reverse = !$scope.reverse
-                    console.log($scope.reverse)
-                    needed = orderBy(needed, "product", $scope.reverse);
-                }else {
-                    needed = orderBy(needed, $scope.aisleOrder);
-                } 
-                console.log(JSON.stringify(needed)) ;
-                console.log(JSON.stringify(done)) ;
-                items = $scope.items  = ListService.union(needed,done,'product')
-                console.log(JSON.stringify(items))    
-            };   
-            var aisles = s2g_shops["s_Bereti"].aisles;
-            //console.log(aisles);
-            $scope.aisleOrder = function(item){
-                if(!item.loc){
-                    return 0 
-                }else {
-                    var ret = aisles.indexOf(item.loc);
-                    //console.log(ret)
-                    return ret;   
-                }  
-            };
-
-
-            console.log('$rootScope.online: '+$rootScope.online)
-            ListService.update(list).then(function(data){
-                //console.log(data.items); 
-                items = $scope.items =data.items ;
-                var filt = $filter('filter')(items, {done:false});
-                if(filt){
-                    $scope.cnt = $filter('filter')(items, {done:false}).length;                                                        
-                } else {
-                    $scope.cnt = 0;
-                }
-                $scope.$watch('items', function(newValue, oldValue){
-                    console.log('watch is triggered');
-                    //console.log(items);
-                    list.items = items;
-                    $scope.timestamp= list.timestamp = Date.now();
-                    $scope.cnt = $filter('filter')(items, {done:false}).length;
-                    //$scope.online=UserLS.serverIsOnline();
-                    $scope.query = '';
-                    if (newValue !== oldValue) { // This prevents unneeded calls to update
-                        ListService.update(list).then(function(data){
-                            console.log(data.items); 
-                            items = $scope.items =data.items              
-                        }, function(data){//
-                            console.log('on error do nothing')
-                        });
-                    }
-                }, true);   
-            }, function(data){
-            });
-            clist = function(){
-                var olist = {lid: lid, timestamp: Date.now(), items: $scope.items}
-                console.log(JSON.stringify(clist))
-                return olist; 
-            };
-            $scope.update=function(){
-                console.log('in scope update')
-                ListService.update(clist()).then(function(data){
-                    items = $scope.items =data.items              
-                }, function(data){//
-                    console.log('on error do nothing')
-                });            
-            };
-            $scope.poll=function(){
-                console.log('in scope poll')
-                ListService.poll(clist())
-                list = ListService.getLS(listInfo);
-                items =$scope.items = list.items;
-            };        
-            var destroyed = false;
-            var running;
-            var runUpd = function(){
-                // running = $interval(function(){
-                //     ListService.ckIfOnline();
-                //     $scope.online = UserLS.serverIsOnline();
-                //     console.log($scope.online);
-                //     if(UserLS.serverIsOnline()){
-                //         $scope.update();
-                //     }
-                // },5000);                        
-            };
-            var cancelRunning = function() {
-                if (running) {$interval.cancel(running);}
-            };        
-            runUpd();
-            $scope.$on("$destroy", function() {
-                console.log('destroyed')
-                destroyed = true;
-                cancelRunning();
-            });
-            angular.element($window).bind('blur', function () {
-                cancelRunning();
-            })        
-            angular.element($window).bind('focus', function () {
-                if (!destroyed){$scope.update();}
-            })
-            $scope.query='';
-            $scope.rubmit = function(){
-                if ($scope.query) {
-                    console.log($scope.query)
-                    $scope.items.push({product:this.query, done:false});
-                    console.log($scope.items);
-                    $scope.query = '';
-                 }
-            };
-            $scope.remove= function(item){
-                console.log(item.product);
-                var idx = $scope.items.indexOf(item);
-                $scope.items.splice(idx,1);
-                console.log(idx);
-            };
-            $scope.editItem = function(item){
-                console.log('in editItem')
-                cancelRunning();
-                $scope.editedItem= item;
-                console.log($scope.editedItem == item)
-                $scope.originalItem = angular.extend({}, item);
-            };
-            $scope.revertEdit = function(item){
-                console.log('escaped into revertEdit')
-                items[items.indexOf(item)] = $scope.originalItem;
-                $scope.doneEditing($scope.originalItem);           
-            };
-            $scope.doneEditing = function(item){
-                console.log('in doneEditing')
-                $scope.editedItem = null;
-                item.product = item.product.trim();
-                if(item.amt){
-                    if(item.amt.qty) {item.amt.qty = item.amt.qty.trim()};
-                    if(item.amt.unit) {item.amt.unit = item.amt.unit.trim()};
-                }
-                if (!item.product) {
-                    $scope.remove(item);
-                } 
-                runUpd();
-            };
-            $scope.switch=function(shop){
-                var idx = $scope.shops.map(function(e){return e.lid}).indexOf(shop.lid);
-                UserLS.setDefaultList(idx);
-                console.log(shop)
-                list = ListService.getLS(shop);
-                $scope.items = list.items;
-                console.log(JSON.stringify($scope.items))
-                console.log(idx);
-            }
-        };
-    */    
-
-//     if (TokenService.tokenExists()){
-//         console.log('in  ListCtrl')
-//         var name = UserLS.getLastLive();
-//         console.log(name);
-//         $scope.name = name;
-//         var dl= UserLS.getDefaultList();
-//         console.log(dl);
-//         if (dl){
-//             var lid = dl.lid;
-//             console.log(lid)
-//             $scope.lid= lid;
-//             DbService.getList(lid).then(function(data){
-//                 $scope.listInfo = data;   
-//                 var list = $scope.list = data.list;
-//                 $scope.$watch('list', function(newValue, oldValue){
-//                     console.log(list);
-//                     $scope.cnt = $filter('filter')(list, {done:false}).length;
-//                     if (newValue !== oldValue) { // This prevents unneeded calls to the local storage
-//                         ItemsData.put(list);
-//                     }
-//                 }, true);                
-//             }, function(error){
-//                 if(error.search('Signature verification failed')>-1){
-//                     UserLS.setRegMessage('Token did not work, try getting another');
-//                     UserLS.setRegState('Get token');
-//                     $state.go('register');
-//                 } ;
-//                 console.log(typeof error);
-//             });                 
-//         } else {
-//             console.log('aint no default list');
-//             $state.go('lists');
-//         }   
-//     } else{
-//         UserLS.setRegState('Get token');
-//         $state.go('register');
-//     }
-// }]);
 
 stuffAppControllers.controller('UserCtrl', ['$scope', 'DbService', 'TokenService', 'UserLS', 'Users', 'Lists', function ($scope, DbService,TokenService, UserLS, Users,Lists) {
     if (TokenService.tokenExists()){
@@ -733,7 +492,7 @@ stuffAppControllers.controller('ConfigCtrl', ['$scope', function ($scope) {
     $scope.dog = 'kazzy';
 
 }]);
-stuffAppControllers.controller('AdminCtrl', ['$scope', 'UserLS',  'TokenService', 'ListService', function ($scope, UserLS, TokenService, ListService) {
+stuffAppControllers.controller('AdminCtrl', ['$scope', 'UserLS',  'TokenService', 'ListService', 'Lists', 'Users', 'Stores', function ($scope, UserLS, TokenService, ListService, Lists, Users, Stores) {
     $scope.username='';
     $scope.dog = 'piper';
     $scope.output = '';
@@ -774,14 +533,25 @@ stuffAppControllers.controller('AdminCtrl', ['$scope', 'UserLS',  'TokenService'
         $scope.outputL=TokenService.delUserToken($scope.usernameT);
         $scope.userL='';
     };  
+    $scope.store='';
+    $scope.outputS= '';
+    $scope.listAllS = function(){
+        $scope.outputS=JSON.parse(localStorage.getItem('s2g_stores')) || {};
+        $scope.store='';
+    }; 
+    $scope.findS = function(){
+        $scope.outputS='';
+    };  
+    $scope.delL = function(){
+        $scope.outputS='';
+        $scope.userL='';
+    };      
     $scope.reset= function(){
-        localStorage.setItem('s2g_clists', JSON.stringify(lists)); 
-        localStorage.setItem('s2g_users', JSON.stringify(users)); 
+        Users.reset();
+        Lists.reset();
+        Stores.reset();
     }; 
     $scope.clear= function(){
         localStorage.clear()
-    }; 
-    var lists ={"Jutebi":{"lid":"Jutebi","shops":"groceries","timestamp":1395763172175,"items":[{"product":"banana","done":false,"tags":[],"amt":{}},{"product":"coffee","done":false,"tags":[],"amt":{}},{"product":"apples","done":true,"tags":["produce"],"amt":{"qty":3,"unit":"3lb bag"}},{"product":"milk","done":false,"tags":["orgainic","dairy"],"amt":{"qty":1,"unit":"1/2 gal"}},{"product":"butter","done":false,"tags":[],"amt":{}},{"product":"teff flour","done":true,"tags":[],"amt":{}}],"stores":[{"id":"s_Bereti","name":"Stop&Shop"}],"users":["tim"]},"Guvupa":{"lid":"Guvupa","shops":"groceries","timestamp":1395763172175,"items":[],"users":[]},"Kidoju":{"lid":"Kidoju","shops":"hardware","timestamp":1395763172175,"items":[{"product":"duck tape","done":false,"tags":[],"amt":{}},{"product":"duck tape","done":false,"tags":[],"amt":{}},{"product":"screws","done":false,"tags":[],"amt":{}},{"product":"fuzz balls","done":true,"tags":[],"amt":{}}],"users":["tim7","tim"]},"Woduvu": {"lid":"Woduvu","shops":"drugs","timestamp":1395763172175,"items":[],"users":[]}}    
-    var users = {"activeUser":"tim","regState":"Authenticated","regMessage":"all set you are authorized and have token","userList":["tim"],"tim":{"_id":"5403d1921bc51d0c0aab879b","apikey":"Natacitipavuwunexelisaci","defaultLid":"Jutebi","email":"mckenna.tim@gmail.com","id":1,"lists":[{"lid":"Jutebi","shops":"groceries"},{"lid":"Kidoju","shops":"hardware"}],"name":"tim","role":"admin","timestamp":1409667265319}}
-}]);
-
+    };
+}]);     

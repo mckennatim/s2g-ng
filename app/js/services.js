@@ -331,12 +331,13 @@ stuffAppServices.factory( 'ListService', ['$q', '$http', '$log', 'DbService', 'U
         },
         joinList: function(lid){
             var s;
+            var instance =this;
             var url=httpLoc + 'user/'+lid;      
             var deferred = $q.defer();     
             $http.put(url).
                 success(function(data,status){
                     console.log(data)
-                    this.putLS(data)
+                    instance.putLS(data)
                     s=data
                     deferred.resolve(data)
                 }).
@@ -603,6 +604,7 @@ stuffAppServices.factory('UserLS', function() {
             return ret[user];
         },
         getLastLiveUserRec: function(){
+            console.log('in getLastLiveUserRec') 
             var name = this.getLastLive();
             return this.getUser(name);
         },  
@@ -927,9 +929,15 @@ stuffAppServices.factory('OnlineInterceptor', function($rootScope, $q){
                 return $q.when(response);
             },
             response: function(response){
-                $rootScope.status = response.status;
-                $rootScope.online = true;
-                //console.log('inter resp '+$rootScope.online+ response.status)
+                if (response.config.url.substring(0,8)=='partials'){//hack
+                    $rootScope.status = response.status;
+                    $rootScope.online = false;                    
+                }else{
+                    $rootScope.status = response.status;
+                    $rootScope.online = true;                    
+                }
+                console.log(response.config.url.substring(0,8))
+                console.log('inter resp '+$rootScope.online+ response.status)
                 return $q.when(response);           
             }
         };
@@ -942,11 +950,11 @@ stuffAppServices.factory('Lists', function(){
     return{ 
         lal: lal,
         makeDefLid: function(lid){
-            console.log(lid)
             lal.activeList = lid;
             localStorage.setItem('s2g_clists', JSON.stringify(lal));
         },
         reset: function(){
+            console.log(JSON.stringify(lists))
             localStorage.setItem('s2g_clists', JSON.stringify(lists));
         },
         saveLists: function(){
@@ -957,12 +965,11 @@ stuffAppServices.factory('Lists', function(){
     }   
 })
 
-stuffAppServices.factory('Users', function(Lists){
+stuffAppServices.factory('Users', ['Lists', '$http', '$q', function(Lists, $http, $q){
     var al = JSON.parse(localStorage.getItem('s2g_users'))
     return{
         al:al,
         makeDefLid: function(lid){
-            console.log(lid)
             al[al.activeUser].defaultLid = lid;
             localStorage.setItem('s2g_users', JSON.stringify(al));
             Lists.makeDefLid(lid);
@@ -973,7 +980,92 @@ stuffAppServices.factory('Users', function(Lists){
             localStorage.setItem('s2g_users', JSON.stringify(al)); 
         },
         reset: function(){
+            console.log(JSON.stringify(users))
             localStorage.setItem('s2g_users', JSON.stringify(users));
+        },
+        dBget: function(){
+            var s;
+            var instance =this;
+            //console.log(al.activeUser)
+            var url=httpLoc + 'users/'+al.activeUser;      
+            var deferred = $q.defer();     
+            $http.get(url).
+                success(function(data,status){
+                    //console.log(data)
+                    if(!data.message){
+                        instance.reloadUser(data)                       
+                    }
+                    s=data
+                    deferred.resolve(data)
+                }).
+                error(function(data,status){
+                    s= data
+                    deferred.reject(data)
+                });
+                s=deferred.promise;
+                return s;            
+            },
+        dBjoin: function(lid){
+            var s;
+            var instance =this;
+            var url=httpLoc + 'user/'+lid;      
+            var deferred = $q.defer();     
+            $http.put(url).
+                success(function(data,status){
+                    console.log(data)
+                    if(!data.message){
+                        instance.addList({lid:data.lid, shops: data.shops})                        
+                    }
+                    s=data
+                    deferred.resolve(data)
+                }).
+                error(function(data,status){
+                    s= data
+                    deferred.reject(data)
+                });
+                s=deferred.promise;
+                return s;
+        },
+        dBdelList: function(lid){
+            var instance=this;
+            var s;
+            var url=httpLoc + 'lists/' + lid ;
+            var deferred = $q.defer();
+            $http.delete(url).
+                success(function(data,status){
+                    if(!data.message){
+                        data.defaultLid = data.lists[0].lid;
+                        instance.reloadUser(data)                        
+                    }                    
+                    s=data
+                    deferred.resolve(data)
+                }).
+                error(function(data,status){
+                    s= data
+                    deferred.reject(data)
+                });
+                s=deferred.promise;
+                return s;
+        },
+        addList: function(listInfo){
+            al[al.activeUser].lists.push(listInfo)
+            localStorage.setItem('s2g_users', JSON.stringify(al));            
+        },
+        reloadUser: function(data){
+            al[al.activeUser]=data;
+            console.log(data);
+            localStorage.setItem('s2g_users', JSON.stringify(al));            
+        }
+   }
+}])
+
+stuffAppServices.factory('Stores', function(){
+    var st = JSON.parse(localStorage.getItem('s2g_stores'))
+    return{
+        st:st,
+        reset: function(){
+            console.log(JSON.stringify(stores))
+            localStorage.setItem('s2g_stores', JSON.stringify(stores));
         },
 
    }
@@ -981,8 +1073,59 @@ stuffAppServices.factory('Users', function(Lists){
 
 var tokens = {"userList":["tim","tim7"],"tim":"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJuYW1lIjoidGltIn0.LmoK1Nr8uA4hrGr25L2AlKXs6U832Z_lE6JGznHJfFs","tim7":"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJuYW1lIjoidGltNyJ9.puFMhr9kjiRfyRzlYDLdD7rOveQO5KgR6TkDqLmMYk0"}
 
-var users = {"activeUser":"tim7","regState":"Authenticated","regMessage":"all set you are authorized and have token","userList":["tim","tim7"],"tim":{"_id":"5409c803d7a626d671297331","apikey":"Natacitipavuwunexelisaci","defaultLid":"Kidoju","defaultList":2,"email":"mckenna.tim@gmail.com","id":1,"lists":[{"lid":"Tamaki","shops":"down center"},{"lid":"Jutebi","shops":"groceries"},{"lid":"Kidoju","shops":"hardware"}],"name":"tim","role":"admin","timestamp":1409936908725},"tim7":{"_id":"5409ee0cc4cd771572c29335","apikey":"Qemavohegoburuxosuqujoga","defaultList":1,"email":"tim@sitebuilt.net","id":5,"lists":[{"lid":"Jutebi","shops":"groceries"},{"lid":"Woduvu","shops":"drugs"}],"name":"tim7","role":"user","timestamp":1410027284251,"defaultLid":"Jutebi"},"lastLive":0}
-
+var users = {
+  "activeUser": "tim7",
+  "regState": "Authenticated",
+  "regMessage": "all set you are authorized and have token",
+  "userList": [
+    "tim",
+    "tim7"
+  ],
+  "tim": {
+    "_id": "5409c803d7a626d671297331",
+    "apikey": "Natacitipavuwunexelisaci",
+    "defaultLid": "Kidoju",
+    "email": "mckenna.tim@gmail.com",
+    "id": 1,
+    "lists": [
+      {
+        "lid": "Tamaki",
+        "shops": "down center"
+      },
+      {
+        "lid": "Jutebi",
+        "shops": "groceries"
+      },
+      {
+        "lid": "Kidoju",
+        "shops": "hardware"
+      }
+    ],
+    "name": "tim",
+    "role": "admin",
+    "timestamp": 1409936908725
+  },
+  "tim7": {
+    "_id": "5409ee0cc4cd771572c29335",
+    "apikey": "Qemavohegoburuxosuqujoga",
+    "defaultLid": "Jutebi",
+    "email": "tim@sitebuilt.net",
+    "id": 5,
+    "lists": [
+      {
+        "lid": "Jutebi",
+        "shops": "groceries"
+      },
+      {
+        "lid": "Woduvu",
+        "shops": "drugs"
+      }
+    ],
+    "name": "tim7",
+    "role": "user",
+    "timestamp": 1410027284251
+  },
+}
 var lists = {
   "activeList": "Jutebi",       
   "Jutebi": {
@@ -996,7 +1139,8 @@ var lists = {
         "tags": [],
         "amt": {
           "qty": ""
-        }
+        },
+        "loc": "dairy"
       },
       {
         "product": "coffee",
@@ -1004,7 +1148,8 @@ var lists = {
         "tags": [],
         "amt": {
           "qty": ""
-        }
+        },
+        "loc": "coffee tea"
       },
       {
         "product": "milk",
@@ -1014,16 +1159,18 @@ var lists = {
           "dairy"
         ],
         "amt": {
-          "qty": "",
+          "qty": "2",
           "unit": "1/2 gal"
-        }
+        },
+        "loc": "dairy"
       },
       {
         "product": "frog legs",
         "done": false,
         "amt": {
-          "qty": ""
-        }
+          "qty": "3"
+        },
+        "loc": "meat"
       },
       {
         "product": "apples",
@@ -1032,16 +1179,18 @@ var lists = {
           "produce"
         ],
         "amt": {
-          "qty": "",
+          "qty": "2",
           "unit": "3lb bag"
-        }
+        },
+        "loc": "produce"
       },
       {
         "product": "seltzer",
         "done": true,
         "amt": {
-          "qty": ""
-        }
+          "qty": "4"
+        },
+        "loc": "snacks"
       },
       {
         "product": "banana",
@@ -1049,30 +1198,38 @@ var lists = {
         "tags": [],
         "amt": {
           "qty": ""
-        }
+        },
+        "loc": "produce"
       },
       {
         "product": "cat food",
         "done": true,
         "amt": {
           "qty": ""
-        }
+        },
+        "loc": "pet"
       },
       {
         "product": "teff flour",
         "done": true,
         "tags": [],
-        "amt": {}
+        "amt": {},
+        "loc": "baking"
       }
     ],
     "stores": [
       {
         "id": "s_Bereti",
-        "name": "Stop&Shop"
+        "name": "Stop&Shop",        
+      },
+      {
+        "id": "s_Bereto",
+        "name": "WholeFoods"        
       }
     ],
     "users": [
-      "tim"
+      "tim",
+      "tim7"
     ]
   },
   "Guvupa": {
@@ -1106,9 +1263,18 @@ var lists = {
       }
     ],
     "users": [
-      "tim7",
       "tim"
-    ]
+    ],
+    "stores": [
+      {
+        "id": "s_Cereti",
+        "name": "HomeDepot"      
+      },
+      {
+        "id": "s_Cereto",
+        "name": "Ace"        
+      }
+    ],    
   },
   "Woduvu": {
     "lid": "Woduvu",
@@ -1129,7 +1295,19 @@ var lists = {
         "amt": {}
       }        
     ],
-    "users": []
+    "users": [
+        "tim7"
+    ],
+       "stores": [
+      {
+        "id": "s_Bereti",
+        "name": "Stop&Shop",        
+      },
+      {
+        "id": "s_Beretc",
+        "name": "CVS"        
+      }
+    ],
   },
   "Tamaki": {
     "lid": "Tamaki",
@@ -1147,8 +1325,77 @@ var lists = {
   }
 }
 
-
-
+var stores=  {
+  "default": {
+    "name": "default",
+    "aisles": [
+        "produce",
+        "nuts",
+        "seafood",
+        "coffee/tea",
+        "cookies",
+        "cereal",
+        "canned",
+        "meats",
+        "baking",
+        "snacks",
+        "pet",
+        "paper/plastic",
+        "cleaning",
+        "frozen",
+        "dairy",
+        "bread"
+    ]
+  },
+  "s_Bereti": {
+    "name": "Stop&Shop",
+    "aisles": [
+        "produce",
+        "nuts",
+        "seafood",
+        "coffee/tea",
+        "cookies",
+        "cereal",
+        "meats",
+        "canned",        
+        "baking",
+        "snacks",
+        "pet",
+        "paper/plastic",
+        "cleaning",
+        "frozen",
+        "dairy",
+        "bread"
+    ],
+    "address": "301 Centre St, Jamaica Plain, MA 02130",
+    "geo":{
+        "lat": 42.324118,
+        "lon": -71.103166
+    },
+    "url": "http://stopandshop.shoplocal.com/stopandshop/default.aspx?action=entry&pretailerid=-99254&siteid=673&storeID=2598877"
+  },
+  "s_Bereto": {
+    "name": "WholeFoods",
+    "aisles": [
+        "produce",
+        "nuts",
+        "meats",
+        "seafood",
+        "dairy",
+        "cereal",
+        "frozen",
+        "deli",
+        "snacks",
+        "bread"
+    ],
+    "address": "413 Centre St, Jamaica Plain, MA 02130",
+    "geo":{
+        "lat": 42.321468,
+        "lon": -71.110925
+    },    
+    "url": "http://www2.wholefoodsmarket.com/storespecials/JMP_specials.pdf"
+  }
+}; 
 
 
 

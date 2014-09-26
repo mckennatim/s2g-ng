@@ -43,6 +43,20 @@
   <div class="output">{{userL}}: {{outputL}}</div>    
 
 </form> 
+
+<form name='AdminForm4'>
+  <div class='form-group'>
+    <label>localStorage -s2g_stores</label>{{isUserT}}  
+    <input type="text" class="form-control" ng-model='store' name='store'>
+  </div>
+  <div class="input-group-btn">
+  <button id= "btn_admin_findL" class="btn btn-primary" ng-click="findS()">find</button>
+  <button id="btn_admin_delL" class="btn btn-primary" ng-click="delS()">del</button>
+  <button id="btn_admin_listallL" class="btn btn-primary" ng-click="listAllS()">list all</button>
+  </div>
+  <div class="output">{{store}}: {{outputS}}</div>    
+
+</form>
 </div>
 </div>
 </div>
