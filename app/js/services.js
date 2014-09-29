@@ -936,7 +936,7 @@ stuffAppServices.factory('OnlineInterceptor', function($rootScope, $q){
                     $rootScope.status = response.status;
                     $rootScope.online = true;                    
                 }
-                console.log(response.config.url.substring(0,8))
+                console.log(response.config.url)
                 console.log('inter resp '+$rootScope.online+ response.status)
                 return $q.when(response);           
             }
@@ -1002,9 +1002,29 @@ stuffAppServices.factory('Users', ['Lists', '$http', '$q', function(Lists, $http
                     s= data
                     deferred.reject(data)
                 });
-                s=deferred.promise;
-                return s;            
-            },
+            s=deferred.promise;
+            return s;            
+        },
+        dBput: function(user) {
+            var uname = user.name
+            console.log(user.name)
+            var url=httpLoc + 'users/'+uname;    
+            var deferred = $q.defer();
+            $http.put(url, user ).   
+                success(function(data, status) {
+                    if(data != undefined){
+                        console.log(data)
+                    };
+                    console.log(status);
+                    deferred.resolve(data);
+                }).
+                error(function(data, status){
+                    console.log(data || "Request failed");
+                    console.log(status);
+                    deferred.reject({message: 'server is down'})
+                });
+            return deferred.promise;
+        },              
         dBjoin: function(lid){
             var s;
             var instance =this;
@@ -1047,6 +1067,27 @@ stuffAppServices.factory('Users', ['Lists', '$http', '$q', function(Lists, $http
                 s=deferred.promise;
                 return s;
         },
+        dBaddList: function(shops){
+            var s;
+            var instance =this;
+            var url=httpLoc + 'lists/' + shops ;
+            var deferred = $q.defer();
+            $http.post(url).
+                success(function(data,status){
+                    if(!data.message){
+                        instance.addList(data)
+                        console.log(data)                     
+                    }                    
+                    s=data
+                    deferred.resolve(data)
+                }).
+                error(function(data,status){
+                    s= data
+                    deferred.reject(data)
+                });
+                s=deferred.promise;
+                return s;
+        },        
         addList: function(listInfo){
             al[al.activeUser].lists.push(listInfo)
             localStorage.setItem('s2g_users', JSON.stringify(al));            
@@ -1149,7 +1190,7 @@ var lists = {
         "amt": {
           "qty": ""
         },
-        "loc": "coffee tea"
+        "loc": "coffee/tea"
       },
       {
         "product": "milk",
@@ -1170,7 +1211,7 @@ var lists = {
         "amt": {
           "qty": "3"
         },
-        "loc": "meat"
+        "loc": "meats"
       },
       {
         "product": "apples",
@@ -1383,7 +1424,9 @@ var stores=  {
         "seafood",
         "dairy",
         "cereal",
+        "baking",
         "frozen",
+        "coffee/tea",
         "deli",
         "snacks",
         "bread"

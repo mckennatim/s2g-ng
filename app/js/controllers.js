@@ -193,10 +193,11 @@ stuffAppControllers.controller('ListsCtrl', ['$scope', '$state', 'TokenService',
         //$scope.listsInput='dog';
         $scope.templUser = 'partials/user.html';        
         var online = $rootScope.online = false ;   
-        DbService.ckIfOnline();  
+        //DbService.ckIfOnline();  
         $scope.lists = Lists;
         $scope.users = Users;
         $scope.active = Users.al.activeUser;
+        Users.dBget().then(function(){});
         $scope.makeActive=function(name){
             Users.makeActive(name);
         }
@@ -241,7 +242,7 @@ stuffAppControllers.controller('ListsCtrl', ['$scope', '$state', 'TokenService',
                     $scope.listsInput = ''
                 });                
             }
-        }
+        };
         $scope.remove = function(list){
             console.log(list)
             alert('Are you sure you want to resign from this list?')
@@ -254,23 +255,36 @@ stuffAppControllers.controller('ListsCtrl', ['$scope', '$state', 'TokenService',
             })
         };
         $scope.add = function(){
-            if ($scope.listsInput) {
-                console.log($scope.listsInput)
-                ListService.addList($scope.listsInput).then(function(data){
-                    if (data==undefined){
-                        console.log(data);
-                        $scope.message=', either you or the server is offline, try later.'
-                    }else{
-                        $scope.lists.push(data)
-                        console.log(JSON.stringify($scope.lists))
-                        UserLS.updLists($scope.lists);                     
+            console.log($scope.listsInput)
+             if ($scope.listsInput) {
+                Users.dBaddList($scope.listsInput).then(function(data){
+                    if (data.message){
+                        $scope.message = data.message;
+                    }else {
+                        $scope.message= ''
+                        console.log(data)
                     }
-                },function(data){
-                    console.log(data);
-                });
-                $scope.listsInput = '';
-             }
-        };                             
+                    $scope.listsInput = ''
+                });                
+            }
+        };
+        $scope.edit =function(list){
+            $scope.editedList=list;
+            $scope.originalItem = angular.extend({}, list);
+        }; 
+        $scope.revertEdit = function(list){
+            console.log('escaped into revertEdit')
+            $scope.editedList = null;
+            $scope.users.al[$scope.users.al.activeUser].lists[$scope.users.al[$scope.users.al.activeUser].lists.indexOf(list)]=$scope.originalItem;
+            //$scope.lists[$scope.lists.indexOf(list)] = $scope.originalItem;
+            //$scope.doneEditing($scope.originalItem);           
+        };
+        $scope.doneEditing = function(list){
+            console.log('in doneEditing')
+            $scope.editedList = null;
+            $scope.users.al[$scope.users.al.activeUser].lists[$scope.users.al[$scope.users.al.activeUser].lists.indexOf(list)]=list;
+            Users.dBput($scope.users.al[$scope.users.al.activeUser]);
+        };                                             
         // $scope.goList = function(listInfo){
         //     console.log(listInfo)
         //     UserLS.setDefaultLid(listInfo);
@@ -352,7 +366,7 @@ stuffAppControllers.controller('ListCtrl', ['$scope', '$state', '$filter',  '$in
         var filter =$filter('filter');
         $scope.templLists = 'partials/lists.html'; 
         online= $scope.online=$rootScope.online=false;
-        DbService.ckIfOnline();
+        //DbService.ckIfOnline();
         $scope.lists = Lists;
         $scope.users = Users;
         $scope.stores=Stores;
@@ -367,10 +381,10 @@ stuffAppControllers.controller('ListCtrl', ['$scope', '$state', '$filter',  '$in
         $scope.$watch('lists', function(newValue,oldValue){
             $scope.cnt=filter($scope.lists.lal[$scope.lists.lal.activeList].items, ({done: false})).length;
             if(newValue!== oldValue){
-                console.log('watch $scope.items changed to' + $rootScope.online );
+                console.log('watch $scope.items changed ');
                 Lists.saveLists();
             }
-        },true );   /*----!important----*/ 
+        },true );   /*----!important-for deep copy---*/ 
         $scope.editItem = function(item){
             console.log(item)
             $scope.editedItem= item;
@@ -424,6 +438,8 @@ stuffAppControllers.controller('ListCtrl', ['$scope', '$state', '$filter',  '$in
                 if(!item.loc){
                     return 0 
                 }else {
+                    //console.log(item.product + ' ' +item.loc)
+                    //console.log($scope.stores.st[store.id].aisles.indexOf(item.loc))
                     return  $scope.stores.st[store.id].aisles.indexOf(item.loc);
                 }  
             };            
@@ -433,7 +449,6 @@ stuffAppControllers.controller('ListCtrl', ['$scope', '$state', '$filter',  '$in
 
         $scope.reverse = false;
         $scope.sort = function(){
-            console.log('sorting')
             var items= $scope.lists.lal[$scope.lists.lal.activeList].items;
             $scope.lists.lal[$scope.lists.lal.activeList].items = orderBy(items, "product", $scope.reverse);
             $scope.reverse = !$scope.reverse
@@ -451,6 +466,7 @@ stuffAppControllers.controller('UserCtrl', ['$scope', 'DbService', 'TokenService
         $scope.lists = Lists;
         $scope.users= Users;
         $scope.active = Users.al.activeUser;
+        DbService.ckIfOnline();
         $scope.makeActive=function(name){
             Users.makeActive(name);
         }

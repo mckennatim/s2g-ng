@@ -8,7 +8,7 @@
 	          Lists <span class="caret"></span>
 	        </button>
 	        <ul class="dropdown-menu" role="menu">
-	          <li ng-repeat="list in users.al[users.al.activeUser].lists  track by $index" ng-click="makeDefListInfo(list)"><a href="#">{{list.shops}}</a></li>
+	          <li ng-repeat="list in users.al[users.al.activeUser].lists  track by $index" ng-click="makeDefListInfo(list)"><a>{{list.shops}}</a></li>
 	        </ul>	
 		</span>	
 		<span class="btn-group btn-group-xs list-btn">
@@ -16,7 +16,7 @@
 	          SortBy<span class="caret"></span>
 	        </button>
 	        <ul class="dropdown-menu" role="menu">
-	          <li ng-repeat="store in lists.lal[lists.lal.activeList].stores  track by $index" ng-click="orderByStore(store)"><a href="#">{{store.name}}</a></li>
+	          <li ng-repeat="store in lists.lal[lists.lal.activeList].stores  track by $index" ng-click="orderByStore(store)"><a >{{store.name}}</a></li>
 	        </ul>	
 		</span>
 		<span>({{cnt}})</span> 
@@ -89,4 +89,4 @@
 	<p>{{timestamp}} </p>
 </div>
 </div>
-<div ng-include="templLists" ng-controller="ListsCtrl"></div>
+<div ng-include="templLists"  ng-controller="ListsCtrl"></div>
