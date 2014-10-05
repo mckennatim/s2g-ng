@@ -986,7 +986,7 @@ stuffAppServices.factory('Users', ['Lists', '$http', '$q', function(Lists, $http
         dBget: function(){
             var s;
             var instance =this;
-            //console.log(al.activeUser)
+            console.log(al.activeUser)
             var url=httpLoc + 'users/'+al.activeUser;      
             var deferred = $q.defer();     
             $http.get(url).
@@ -1003,6 +1003,7 @@ stuffAppServices.factory('Users', ['Lists', '$http', '$q', function(Lists, $http
                     deferred.reject(data)
                 });
             s=deferred.promise;
+            console.log(s);
             return s;            
         },
         dBput: function(user) {
@@ -1054,6 +1055,7 @@ stuffAppServices.factory('Users', ['Lists', '$http', '$q', function(Lists, $http
             $http.delete(url).
                 success(function(data,status){
                     if(!data.message){
+                        console.log(data)
                         data.defaultLid = data.lists[0].lid;
                         instance.reloadUser(data)                        
                     }                    

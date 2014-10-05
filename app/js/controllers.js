@@ -197,7 +197,8 @@ stuffAppControllers.controller('ListsCtrl', ['$scope', '$state', 'TokenService',
         $scope.lists = Lists;
         $scope.users = Users;
         $scope.active = Users.al.activeUser;
-        Users.dBget().then(function(){});
+        /*-------event driven-------*/
+
         $scope.makeActive=function(name){
             Users.makeActive(name);
         }
@@ -205,7 +206,6 @@ stuffAppControllers.controller('ListsCtrl', ['$scope', '$state', 'TokenService',
             Users.makeDefLid(def.lid);
             $state.go('list');
         }        
-        /*-------event driven-------*/
         var onFocus = function(){
             console.log('focused')
             DbService.ckIfOnline().then(function(status){
