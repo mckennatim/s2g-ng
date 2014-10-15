@@ -1,0 +1,1 @@
+db.users.update({name:'tim7'}, { _id: '54328fc3327eef4c6794b612', name: 'tim7', email: 'tim@sitebuilt.net',lists:[ { lid: 'Kidoju', shops: 'hardware' },{ lid: 'Jutebi', shops: 'foods' },{ lid: 'Woduvu', shops: 'drugs' } ],role: 'user',timestamp: 1412599747468,apikey: 'Qemavohegoburuxosuqujoga',id: 5 })

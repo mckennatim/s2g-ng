@@ -936,8 +936,8 @@ stuffAppServices.factory('OnlineInterceptor', function($rootScope, $q){
                     $rootScope.status = response.status;
                     $rootScope.online = true;                    
                 }
-                console.log(response.config.url)
-                console.log('inter resp '+$rootScope.online+ response.status)
+                //console.log(response.config.url)
+                //console.log('inter resp '+$rootScope.online+ response.status)
                 return $q.when(response);           
             }
         };
@@ -945,8 +945,72 @@ stuffAppServices.factory('OnlineInterceptor', function($rootScope, $q){
 })
 
 
-stuffAppServices.factory('Lists', function(){
+stuffAppServices.factory('Lists', ['$http', '$q', '$rootScope', function($http, $q, $rootScope){
     var lal = JSON.parse(localStorage.getItem('s2g_clists'));
+    var difference= function(array){
+        var prop =arguments[2];
+        var rest = Array.prototype.concat.apply(Array.prototype, Array.prototype.slice.call(arguments, 1));
+        var containsEquals = function(obj, target) {
+            if (obj == null) return false;
+            return _.any(obj, function(value) {
+                return value[prop] === target[prop];
+            });
+        };
+        return _.filter(array, function(value){
+            return ! containsEquals(rest, value); 
+        });
+    };
+    var union= function (arr1, arr2, prop) {
+        var sa1= JSON.stringify(arr1);
+        var arr3 = JSON.parse(sa1);
+        _.each(arr2, function(arr2obj) {
+            var arr1obj = _.find(arr1, function(arr1obj) {
+                return arr1obj[prop] === arr2obj[prop];
+            });
+            arr1obj ? _.extend(arr3, arr2obj) : arr3.push(arr2obj);
+        });
+        return arr3
+    };   
+    var merge= function(pz2,cz2,sz2){
+        // (C\(P\S))U(S\(P\C))
+        var condT = {'done': true};
+        var condF = {'done': false};
+        var p = _.filter(pz2, condF);
+        var c = _.filter(cz2, condF);
+        var s = _.filter(sz2, condF);
+        var sT = _.filter(sz2, condT);
+        var ps = difference(p,s, 'product');
+        var pc = difference(p,c, 'product' );
+        var cps = difference(c,ps, 'product');
+        var spc = difference(s,pc, 'product');
+        var arr3 = union(spc, cps, 'product');
+        //(MERGED{'done':false}) U (Server,{'done': true})
+        var arr4 = union(arr3, sT, 'product');
+        return arr4
+    };
+    var getPlist= function(listInfo){
+        var key = 's2g_plists';
+        var pal=JSON.parse(localStorage.getItem(key)) || {};
+        var list = pal[listInfo.lid];
+        if(!list){
+            list = {lid: listInfo.lid, shops: listInfo.shops, timestamp: 0, items: [], users: []}
+            pal[list.lid]=list;
+            localStorage.setItem(key, JSON.stringify(pal));
+        }
+        return list;
+    }
+    var setPlist= function(list){
+        var key = 's2g_plists'
+        var pal=JSON.parse(localStorage.getItem(key)) || {};
+        pal[list.lid]=list;
+        localStorage.setItem(key, JSON.stringify(pal));
+    }    
+    var setClist= function(list){
+        var key = 's2g_clists'
+        var pal=JSON.parse(localStorage.getItem(key)) || {};
+        pal[list.lid]=list;
+        localStorage.setItem(key, JSON.stringify(pal));
+    }               
     return{ 
         lal: lal,
         makeDefLid: function(lid){
@@ -956,14 +1020,81 @@ stuffAppServices.factory('Lists', function(){
         reset: function(){
             console.log(JSON.stringify(lists))
             localStorage.setItem('s2g_clists', JSON.stringify(lists));
+            localStorage.setItem('s2g_plists', JSON.stringify(lists));            
         },
-        saveLists: function(){
+        saveList: function(){
+            lal[lal.activeList].timestamp = Date.now();
+            console.log(lal[lal.activeList].timestamp)
+            //console.log(JSON.stringify(lal[lal.activeList].items));
             localStorage.setItem('s2g_clists', JSON.stringify(lal));
             var newLal = JSON.parse(localStorage.getItem('s2g_clists'));
             angular.copy(newLal, lal);
-        }
+            this.updList(lal[lal.activeList]);
+        },
+        updList: function(list){
+            var deferred =$q.defer();
+            var listInfo = {lid: list.lid, shops: list.shops}
+            console.log('in updList, $rootScope.online: ' +$rootScope.online)
+            if(!$rootScope.online){
+                deferred.resolve(list)
+            }else{  
+                var c, p, s, cts, sts, pts, nts, updItems;
+                c = list;
+                cts = c.timestamp;
+                //console.log(JSON.stringify(c))
+                p = getPlist(listInfo);
+                pts = p.timestamp;
+                var url=httpLoc + 'lists/'+listInfo.lid; 
+                //console.log(JSON.stringify($http.defaults.headers))
+                $http.get(url).   
+                    success(function(data, status) {
+                        console.log('GET list from server: '+status)
+                        var putIt=false;
+                        s=data;
+                        sts = s.timestamp
+                        console.log(c.lid)
+                        console.log(pts +' ' + new Date(pts))
+                        console.log(cts +' ' + new Date(cts))
+                        console.log(sts +' ' + new Date(sts))                        
+                        if (sts > pts){ //if server has been updated since prior LS
+                            console.log('merging')
+                            updItems=merge(p.items, c.items, s.items);
+                            nts=Date.now();
+                            c.items=updItems;
+                            c.timestamp =nts;
+                            setClist(c);
+                            putIt=true
+                        } else if(cts==pts && cts==sts){
+                            console.log('timestamps =, doing nothing')   
+                        } else {
+                            console.log('just sending c ')
+                            updItems=c.items;
+                            nts=cts;
+                            putIt=true
+                        }
+                        if (putIt){
+                            p.items = updItems;
+                            p.timestamp = nts;
+                            setPlist(p);
+                            $http.put(url, {timestamp:nts, items: updItems}).
+                                success(function(data, status) {
+                                    console.log('PUT updated list on server: ' +status)
+                                    console.log(data)
+                                }).                
+                                error(function(data, status){
+                                    console.log(status)
+                                });
+                             deferred.resolve(p); 
+                        }                                                                          
+                    }).
+                    error(function(data, status){
+                        deferred.reject(data)
+                    });
+            }
+            return deferred.promise
+        }           
     }   
-})
+}])
 
 stuffAppServices.factory('Users', ['Lists', '$http', '$q', function(Lists, $http, $q){
     var al = JSON.parse(localStorage.getItem('s2g_users'))
@@ -1003,7 +1134,6 @@ stuffAppServices.factory('Users', ['Lists', '$http', '$q', function(Lists, $http
                     deferred.reject(data)
                 });
             s=deferred.promise;
-            console.log(s);
             return s;            
         },
         dBput: function(user) {
@@ -1057,7 +1187,8 @@ stuffAppServices.factory('Users', ['Lists', '$http', '$q', function(Lists, $http
                     if(!data.message){
                         console.log(data)
                         data.defaultLid = data.lists[0].lid;
-                        instance.reloadUser(data)                        
+                        instance.reloadUser(data);
+                        Lists.makeDefLid(data.defaultLid);                        
                     }                    
                     s=data
                     deferred.resolve(data)
@@ -1096,7 +1227,7 @@ stuffAppServices.factory('Users', ['Lists', '$http', '$q', function(Lists, $http
         },
         reloadUser: function(data){
             al[al.activeUser]=data;
-            console.log(data);
+            //console.log(data);
             localStorage.setItem('s2g_users', JSON.stringify(al));            
         }
    }

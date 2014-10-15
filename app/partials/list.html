@@ -19,7 +19,7 @@
 	          <li ng-repeat="store in lists.lal[lists.lal.activeList].stores  track by $index" ng-click="orderByStore(store)"><a >{{store.name}}</a></li>
 	        </ul>	
 		</span>
-		<span>({{cnt}})</span> 
+		<span>({{notdone.length}})</span> 
 		<span class="btn-group btn-group-xs list-btn" >
 			<button class="btn btn-default" ng-click="showLoc=!showLoc">loc</button>
 			<button class="btn btn-default" ng-click="showTags=!showTags">tags</button>
@@ -28,12 +28,12 @@
 		<span class="glyphicon glyphicon-signal" ng-show="online"></span>
 		<span class="glyphicon glyphicon-ban-circle" ng-show="!online"></span>
 		<span>{{users.al.activeUser}}</span>
-		<span>{{users.al[users.al.activeUser].defaultLid}}</span>
+		<span>{{lists.lal.activeList}}</span>		
 		<ul class="list group" >
-			<li ng-repeat="item in lists.lal[lists.lal.activeList].items | filter:{done:false} track by $index" class="list-group-item need"
+			<li ng-repeat="item in notdone = (lists.lal[lists.lal.activeList].items | filter:{done:false}) track by $index" class="list-group-item need"
 			ng-class="{editing: item==editedItem}" >
 			<div class="view" >
-					<input type="checkbox" ng-model="item.done" ng-click="item.amt.qty=''">
+					<input type="checkbox" ng-model="item.done" ng-change="ckDone(item)">
 					<span class="done-{{item.done}} product" ng-click="editItem(item)" >{{item.product}}</span>	
 					<span ng-show="item.amt.qty > 0" >
 						<span class="amt" >{{item.amt.qty}}  </span>
@@ -67,7 +67,7 @@
 		<span class="got-list-head">from old lists</span> 
 		<ul class="list group" >
 			<li ng-repeat="got in lists.lal[lists.lal.activeList].items | filter:{done:true} | filter:query track by $id($index)" class="list-group-item need">
-				<input class="ck-box" type="checkbox" ng-model="got.done">
+				<input class="ck-box" type="checkbox" ng-model="got.done"ng-change="ckDone(got)">
 				<span class="done-{{got.done}} product">{{got.product}}</span>
 				<i ng-click="remove(got)" class="pull-right glyphicon glyphicon-remove " ></i>  
 				<!-- <i class="glyphicon glyphicon-chevron-down" ></i>   -->
