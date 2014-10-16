@@ -1,7 +1,7 @@
 <div class="bkg-list col1" ng-click="update()">
 	<div>
 
-	<div class="top-spc">
+	<div class="top-spc" >
 
 		<span class="btn-group btn-group-xs list-btn">
 	        <button type="button" class="btn btn-primary dropdown-toggle" ng-disabled="disabled">
@@ -31,7 +31,7 @@
 		<span>{{lists.lal.activeList}}</span>		
 		<ul class="list group" >
 			<li ng-repeat="item in notdone = (lists.lal[lists.lal.activeList].items | filter:{done:false}) track by $index" class="list-group-item need"
-			ng-class="{editing: item==editedItem}" >
+			ng-class="{editing: item==editedItem}" ng-click="onFocus()">
 			<div class="view" >
 					<input type="checkbox" ng-model="item.done" ng-change="ckDone(item)">
 					<span class="done-{{item.done}} product" ng-click="editItem(item)" >{{item.product}}</span>	

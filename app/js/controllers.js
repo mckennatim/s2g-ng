@@ -1,8 +1,5 @@
 'use strict';
 
-//var httpLoc = 'http://10.0.1.24:3000/api/';
-//var httpLoc = 'http://localhodst:3000/api/';
-
 /* Controlrs */
 var stuffAppControllers = angular.module('stuffAppControllers', []);
 
@@ -10,48 +7,10 @@ stuffAppControllers.controller('RootController', function($scope, $state) {
     $scope.$state = $state;
 });
 
-stuffAppControllers.controller('ItemsCtrl', ['$scope', function ($scope) {
-    $scope.dog = 'mutt';
-}]);
-
 stuffAppControllers.controller('TimeCtrl', function ($scope, UsersData) {
     $scope.timestamp=Date.now();
-    $scope.addUser = function(){
-        console.log('in addUser');
-        UsersData.post().then(function(d){
-            console.log(d);
-        });
-    };
 });
 
-stuffAppControllers.controller('InpCtrl', function ($scope, ItemsData, $filter) {
-    var list;
-    // ItemsData.get().then(function(d){
-    //     console.log(d);
-    //     list= $scope.list = d.data;
-    //     $scope.$watch('list', function(newValue, oldValue){
-    //         console.log(list);
-    //         $scope.cnt = $filter('filter')(list, {done:false}).length;
-    //         if (newValue !== oldValue) { // This prevents unneeded calls to the local storage
-    //             ItemsData.put(list);
-    //         }
-    //     }, true);
-    // });
-    // $scope.query='';
-    // $scope.rubmit = function(){
-    //     if ($scope.query) {
-    //         $scope.list.push({lid:26, product:this.query, done:false});
-    //         $scope.query = '';
-    //      }
-    // };
-    // $scope.clearTbox = function(){$scope.query = '';};
-    // $scope.remove= function(item){
-    //     console.log(item.product);
-    //     var idx = $scope.list.indexOf(item);
-    //     $scope.list.splice(idx,1);
-    //     console.log(idx);
-    // };
-});
 
 stuffAppControllers.controller('RegisterCtrl', ['$scope', '$http', 'AuthService', 'UserLS',  'TokenService', 'DbService', 'ListService', '$rootScope', function ($scope, $http, AuthService, UserLS, TokenService, DbService, ListService, $rootScope) {
     if (TokenService.tokenExists()){
@@ -220,8 +179,8 @@ stuffAppControllers.controller('ListsCtrl', ['$scope', '$state', 'TokenService',
         $window.onfocus = onFocus;           
 
         $rootScope.$watch('online', function(newValue, oldValue){
-            console.log('watched')
-            console.log(newValue)
+            //console.log('watched')
+            //console.log(newValue)
             if (newValue !== oldValue) {
                 online=$scope.online=newValue;
                 if(newValue){
@@ -304,6 +263,17 @@ stuffAppControllers.controller('ListCtrl', ['$scope', '$state', '$filter',  '$in
         $scope.lists = Lists;
         $scope.users = Users;
         $scope.stores=Stores;
+        $scope.onFocus = function(){
+            console.log('lists focused')
+            DbService.ckIfOnline().then(function(status){
+                if (status==200){
+                    console.log('in onFocus about to dBget and saveList ')
+                    Users.dBget().then(function(){});
+                    Lists.updList($scope.lists.lal[$scope.lists.lal.activeList]);
+                }
+                console.log(status)
+            });
+        }
         $scope.makeActive=function(name){
             Users.makeActive(name);
         }
@@ -311,21 +281,10 @@ stuffAppControllers.controller('ListCtrl', ['$scope', '$state', '$filter',  '$in
             Users.makeDefLid(def.lid);
         }
         $scope.editBuffer={} 
-        /*----------event driven----------*/ 
-        // var onFocus = function(){
-        //     console.log('list focused')
-        //     DbService.ckIfOnline().then(function(status){
-        //         if (status==200){
-        //             console.log('in onFocus about to Lists.saveList ')
-        //             Lists.saveList().then(function(){});
-        //         }
-        //         console.log(status)
-        //     });
-        // }
-        // $window.onfocus = onFocus;            
+     
         $rootScope.$watch('online', function(newValue, oldValue){
-            console.log('watched')
-            console.log(newValue)
+            //console.log('watched')
+            //console.log(newValue)
             if (newValue !== oldValue) {
                 online=$scope.online=newValue;
                 if(newValue){
@@ -439,16 +398,6 @@ stuffAppControllers.controller('UserCtrl', ['$scope', 'DbService', 'TokenService
         $scope.makeDefListInfo =function(def){
             Users.makeDefLid(def.lid); 
         }        
-        // $scope.templUser = 'partials/user.html';    
-        // $scope.state = UserLS.setRegState('Authenticated');
-        // $scope.message=UserLS.setRegMessage(message);
-        // $scope.users= UserLS.getUsers();
-        // console.log($scope.users)
-        // */------------events------------*/
-        // $scope.makeActive = function(user){
-        //     UserLS.setActiveUser(user);
-        //     console.log(user)
-        // }
     } else {
          var message = 'you seem to be lacking a token';
     }   
