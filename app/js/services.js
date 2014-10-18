@@ -1229,6 +1229,21 @@ stuffAppServices.factory('Users', ['Lists', '$http', '$q', function(Lists, $http
             al[al.activeUser]=data;
             //console.log(data);
             localStorage.setItem('s2g_users', JSON.stringify(al));            
+        },
+        blankUser: {name: '', email: '', lists:[], role:'', timestamp: 1, apikey: ''},
+        setRegState: function(m){
+            al.regState = m;
+            localStorage.setItem('s2g_users', JSON.stringify(al));
+        },
+        setRegMessage: function(m){
+            al.regMessage = m;
+            localStorage.setItem('s2g_users', JSON.stringify(al));
+        },
+        getRegMessage: function(){
+            return al.regMessage 
+        },
+        getRegState: function(){
+            return al.regState 
         }
    }
 }])

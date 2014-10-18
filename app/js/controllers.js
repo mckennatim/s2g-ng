@@ -12,23 +12,23 @@ stuffAppControllers.controller('TimeCtrl', function ($scope, UsersData) {
 });
 
 
-stuffAppControllers.controller('RegisterCtrl', ['$scope', '$http', 'AuthService', 'UserLS',  'TokenService', 'DbService', 'ListService', '$rootScope', function ($scope, $http, AuthService, UserLS, TokenService, DbService, ListService, $rootScope) {
+stuffAppControllers.controller('RegisterCtrl', ['$scope', '$http', 'AuthService', 'UserLS',  'TokenService', 'DbService', 'ListService', '$rootScope', 'Users', function ($scope, $http, AuthService, UserLS, TokenService, DbService, ListService, $rootScope, Users) {
     if (TokenService.tokenExists()){
         var message = 'all set you are authorized and have token';
-        $scope.state = UserLS.setRegState('Authenticated');
-        $scope.message=UserLS.setRegMessage(message);
+        $scope.state = Users.setRegState('Authenticated');
+        $scope.message=Users.setRegMessage(message);
     } else {
          var message = 'you seem to be lacking a token';
-        $scope.message=UserLS.setRegMessage(message);
+        $scope.message=Users.setRegMessage(message);
     }
-    console.log(UserLS.getRegMessage());
+    console.log(Users.getRegMessage());
     $scope.dog = 'butler';
     $scope.nameValid =/^\s*\w*\s*$/
-    $scope.user = UserLS.getLastLiveUserRec()  || UserLS.blankUser;
+    $scope.user = Users.al[Users.al.activeUser] || Users.blankUser;//UserLS.getLastLiveUserRec()  || UserLS.blankUser;
     console.log($scope.user);
-    $scope.state=UserLS.getRegState();
+    $scope.state=Users.getRegState();
     if ($scope.state=='Enter apikey'){
-        $scope.message = UserLS.setRegMessage('will give you token when we check your apikey');
+        $scope.message = Users.setRegMessage('will give you token when we check your apikey');
     }
     console.log($scope.state);
     $scope.username=$scope.user.name || '';
@@ -37,7 +37,6 @@ stuffAppControllers.controller('RegisterCtrl', ['$scope', '$http', 'AuthService'
     $scope.isuUser='';
     $scope.isMatch='';
     console.log('in register control')
-    console.log(UserLS.serverIsOnline())
     $scope.$watch('$rootScope.online', function(newValue, oldValue){
         console.log('watchin')
         if (newValue ==false){
@@ -135,11 +134,11 @@ stuffAppControllers.controller('RegisterCtrl', ['$scope', '$http', 'AuthService'
     };    
 }]);
 
-stuffAppControllers.controller('IsregCtrl', function (TokenService, $state) {
+stuffAppControllers.controller('IsregCtrl', function (TokenService, $state, Users) {
      if (TokenService.tokenExists()){
         $state.go('list');
     } else{
-        UserLS.setRegState('Get token');
+        Users.setRegState('Get token');
         $state.go('register');
     }    
 });
