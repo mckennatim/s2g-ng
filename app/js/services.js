@@ -946,7 +946,7 @@ stuffAppServices.factory('OnlineInterceptor', function($rootScope, $q){
 
 
 stuffAppServices.factory('Lists', ['$http', '$q', '$rootScope', function($http, $q, $rootScope){
-    var lal = JSON.parse(localStorage.getItem('s2g_clists'));
+    var lal = JSON.parse(localStorage.getItem('s2g_clists')) || console.log('doesnt esxist');
     var difference= function(array){
         var prop =arguments[2];
         var rest = Array.prototype.concat.apply(Array.prototype, Array.prototype.slice.call(arguments, 1));
