@@ -116,15 +116,18 @@ stuffAppControllers.controller('RegisterCtrl', ['$scope', '$http', 'AuthService'
             if(Object.keys(data)[0]=='message'){
                 response = data.message
                 console.log(data)
-                $scope.message = UserLS.setRegMessage(data.message);
+                $scope.message = Users.setRegMessage(data.message);
                 $scope.apikey = '';
             } else if (data.token.length>40){  
                 //$scope.state=UserLS.getRegState(); 
-                UserLS.setActiveUser(name);
+                Users.makeActive(name);
                 TokenService.setToken(name, data.token);
-                DbService.updateUser();
-                $scope.message = UserLS.setRegMessage('authenticated, token received');
-                $scope.state = UserLS.setRegState('Authenticated');
+                Users.dBget().then(function(){
+                    Users.makeActive(name);
+                    Users.dBgetLists();
+                });                
+                $scope.message = Users.setRegMessage('authenticated, token received');
+                $scope.state = Users.setRegState('Authenticated');
                 $scope.apikey = '';                    
             }
         }, function(data){//if error
@@ -162,6 +165,7 @@ stuffAppControllers.controller('ListsCtrl', ['$scope', '$state', 'TokenService',
         }
         $scope.makeDefListInfo =function(def){
             Users.makeDefLid(def.lid);
+            console.log('clicked shops')
             $state.go('list');
         }        
         var onFocus = function(){
@@ -170,7 +174,11 @@ stuffAppControllers.controller('ListsCtrl', ['$scope', '$state', 'TokenService',
                 if (status==200){
                     console.log('in onFocus about to dBget and saveList ')
                     Users.dBget().then(function(){});
-                    Lists.updList($scope.lists.lal[$scope.lists.lal.activeList]);
+                    if ($scope.lists.lal[$scope.lists.lal.activeList]){
+                        Lists.updList($scope.lists.lal[$scope.lists.lal.activeList]);
+                    }else{
+                        console.log('no active list')
+                    }
                 }
                 console.log(status)
             });
@@ -423,18 +431,22 @@ stuffAppControllers.controller('ConfigCtrl', ['$scope', function ($scope) {
 
 }]);
 stuffAppControllers.controller('AdminCtrl', ['$scope', 'UserLS',  'TokenService', 'ListService', 'Lists', 'Users', 'Stores', function ($scope, UserLS, TokenService, ListService, Lists, Users, Stores) {
+    $scope.users=Users;
     $scope.username='';
     $scope.dog = 'piper';
     $scope.output = '';
     $scope.listAll = function(){
-        $scope.output=UserLS.getAll();
+        console.log('in listall users')
+        Users.LSget();
+        console.log(JSON.stringify(Users.al))
+        $scope.output=Users.al;
         $scope.username='';
     }; 
     $scope.find = function(){
-        $scope.output=UserLS.getUser($scope.username);
+        $scope.output=Users.al[$scope.username];
     };  
     $scope.del = function(){
-        $scope.output=UserLS.delUser($scope.username);
+        $scope.output=Users.LSdel($scope.username);
         $scope.username='';
     };
     $scope.usernameT='';

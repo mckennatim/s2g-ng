@@ -466,7 +466,7 @@ stuffAppServices.factory('UsersData', function($http) {
 stuffAppServices.factory('UserLS', function() {
     var key = 's2g_users';
     var state = 's2g_state';
-    var blankUsers= {lastLive:0, regState: 'Register', regMessage: '', userList:[]};
+    var blankUsers= {activeUser:'', regState: 'Register', regMessage: '', userList:[]};
     var serverOnline = true;    
     return{
         activeUser: function(){
@@ -1031,6 +1031,21 @@ stuffAppServices.factory('Lists', ['$http', '$q', '$rootScope', function($http, 
             angular.copy(newLal, lal);
             this.updList(lal[lal.activeList]);
         },
+        dBget: function(lid){
+            var deferred =$q.defer();
+            var url=httpLoc + 'lists/'+lid; 
+            $http.get(url).   
+                success(function(data, status) {
+                    console.log('GET list from server: '+status);
+                    lal[lid]= data;
+                    localStorage.setItem('s2g_clists', JSON.stringify(lal));
+                    deferred.resolve(data)
+                }) .
+                error(function(data, status){
+                    deferred.reject(data)
+                });
+                return deferred.promise                          
+        },
         updList: function(list){
             var deferred =$q.defer();
             var listInfo = {lid: list.lid, shops: list.shops}
@@ -1097,9 +1112,19 @@ stuffAppServices.factory('Lists', ['$http', '$q', '$rootScope', function($http, 
 }])
 
 stuffAppServices.factory('Users', ['Lists', '$http', '$q', function(Lists, $http, $q){
-    var al = JSON.parse(localStorage.getItem('s2g_users'))
+    var al = JSON.parse(localStorage.getItem('s2g_users')) || {activeList:'', regState:'Register',regMessage:'', userList:[]}
     return{
         al:al,
+        LSget: function(){
+            this.al = JSON.parse(localStorage.getItem('s2g_users')) || {activeUser:'', regState:'Register',regMessage:'', userList:[]}
+        },
+        LSdel: function(username){
+            delete this.al[username];
+            this.al.userList.splice(al.userList.indexOf(username),1);
+            if (al.activeUser==username){al.activeUser='';}
+            console.log(JSON.stringify(al));
+            localStorage.setItem('s2g_users', JSON.stringify(al));
+        },
         makeDefLid: function(lid){
             al[al.activeUser].defaultLid = lid;
             localStorage.setItem('s2g_users', JSON.stringify(al));
@@ -1107,7 +1132,11 @@ stuffAppServices.factory('Users', ['Lists', '$http', '$q', function(Lists, $http
         },
         makeActive: function(name){
             al.activeUser=name;
-            Lists.makeDefLid(al[al.activeUser].defaultLid)
+            console.log(al)
+            if(al[al.activeUser]){
+                Lists.makeDefLid(al[al.activeUser].defaultLid);
+                console.log(Lists.lal.activeList)
+            }
             localStorage.setItem('s2g_users', JSON.stringify(al)); 
         },
         reset: function(){
@@ -1227,10 +1256,12 @@ stuffAppServices.factory('Users', ['Lists', '$http', '$q', function(Lists, $http
         },
         reloadUser: function(data){
             al[al.activeUser]=data;
+            al.userList.push(data.name)
+            al.userList = _.uniq(al.userList)
             //console.log(data);
             localStorage.setItem('s2g_users', JSON.stringify(al));            
         },
-        blankUser: {name: '', email: '', lists:[], role:'', timestamp: 1, apikey: ''},
+        blankUser: {name: '', email: '', defaultLid: '', lists:[], role:'', timestamp: 1, apikey: ''},
         setRegState: function(m){
             al.regState = m;
             localStorage.setItem('s2g_users', JSON.stringify(al));
@@ -1244,6 +1275,12 @@ stuffAppServices.factory('Users', ['Lists', '$http', '$q', function(Lists, $http
         },
         getRegState: function(){
             return al.regState 
+        },
+        dBgetLists: function(){
+            al[al.activeUser].lists.forEach(function(entry){
+                console.log(entry.lid)
+                Lists.dBget(entry.lid)
+            });
         }
    }
 }])
