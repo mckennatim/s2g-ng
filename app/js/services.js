@@ -1013,6 +1013,12 @@ stuffAppServices.factory('Lists', ['$http', '$q', '$rootScope', function($http, 
     }               
     return{ 
         lal: lal,
+        add: function(listInfo){
+            lal.activeList = listInfo.lid;
+            var nl = {lid: listInfo.lid, shops: listInfo.shops, stores:[], items:[], users: listInfo.users, timestamp:0};
+            lal[listInfo.lid]=nl;
+            localStorage.setItem('s2g_clists', JSON.stringify(lal));
+        },
         makeDefLid: function(lid){
             lal.activeList = lid;
             localStorage.setItem('s2g_clists', JSON.stringify(lal));
@@ -1252,6 +1258,8 @@ stuffAppServices.factory('Users', ['Lists', '$http', '$q', function(Lists, $http
         },        
         addList: function(listInfo){
             al[al.activeUser].lists.push(listInfo)
+            listInfo.users = [al.activeUser]
+            Lists.add(listInfo);
             localStorage.setItem('s2g_users', JSON.stringify(al));            
         },
         reloadUser: function(data){

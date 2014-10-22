@@ -343,6 +343,7 @@ stuffAppControllers.controller('ListCtrl', ['$scope', '$state', '$filter',  '$in
             //$scope.doneEditing($scope.originalItem);           
         };                 
         $scope.rubmit = function(){
+            console.log($scope.lists.lal.activeList)
             if ($scope.query) {
                 $scope.lists.lal[$scope.lists.lal.activeList].items.push({product:this.query, done:false});
                 $scope.query = '';
