@@ -433,6 +433,7 @@ stuffAppControllers.controller('ConfigCtrl', ['$scope', function ($scope) {
 }]);
 stuffAppControllers.controller('AdminCtrl', ['$scope', 'UserLS',  'TokenService', 'ListService', 'Lists', 'Users', 'Stores', function ($scope, UserLS, TokenService, ListService, Lists, Users, Stores) {
     $scope.users=Users;
+    $scope.lists=Lists;
     $scope.username='';
     $scope.dog = 'piper';
     $scope.output = '';
@@ -440,11 +441,11 @@ stuffAppControllers.controller('AdminCtrl', ['$scope', 'UserLS',  'TokenService'
         console.log('in listall users')
         Users.LSget();
         console.log(JSON.stringify(Users.al))
-        $scope.output=Users.al;
+        $scope.output=JSON.stringify(JSON.parse(localStorage.getItem('s2g_users')),undefined,2) || {};
         $scope.username='';
     }; 
     $scope.find = function(){
-        $scope.output=Users.al[$scope.username];
+        $scope.output=JSON.stringify(Users.al[$scope.username],undefined,2);
     };  
     $scope.del = function(){
         $scope.output=Users.LSdel($scope.username);
@@ -466,11 +467,11 @@ stuffAppControllers.controller('AdminCtrl', ['$scope', 'UserLS',  'TokenService'
     $scope.userL='';
     $scope.outputL= '';
     $scope.listAllL = function(){
-        $scope.outputL=JSON.parse(localStorage.getItem('s2g_clists')) || {};
+        $scope.outputL=JSON.stringify(JSON.parse(localStorage.getItem('s2g_clists')),undefined,2) || {};
         $scope.userL='';
     }; 
     $scope.findL = function(){
-        $scope.outputL=TokenService.getToken($scope.usernameT);
+        $scope.outputL=JSON.stringify(JSON.parse(localStorage.getItem('s2g_clists'))[$scope.userL],undefined, 2);
     };  
     $scope.delL = function(){
         $scope.outputL=TokenService.delUserToken($scope.usernameT);
