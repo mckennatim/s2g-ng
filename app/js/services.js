@@ -1013,6 +1013,15 @@ stuffAppServices.factory('Lists', ['$http', '$q', '$rootScope', function($http, 
     }               
     return{ 
         lal: lal,
+        delete: function(lid){
+            if(lal[lid].users.length<2){
+                delete lal[lid];
+                if (lal.activeList==lid){
+                    lal.activeList='';
+                }
+                localStorage.setItem('s2g_clists', JSON.stringify(lal));                
+            }
+        },
         add: function(listInfo){
             lal.activeList = listInfo.lid;
             var nl = {lid: listInfo.lid, shops: listInfo.shops, stores:[], items:[], users: listInfo.users, timestamp:0};
@@ -1021,6 +1030,15 @@ stuffAppServices.factory('Lists', ['$http', '$q', '$rootScope', function($http, 
         },
         makeDefLid: function(lid){
             lal.activeList = lid;
+            localStorage.setItem('s2g_clists', JSON.stringify(lal));
+        },
+        makeDefListInfo: function(listInfo){
+            lal.activeList = listInfo.lid;
+            if(lal[lal.activeList]==undefined){
+                var nl = {lid: listInfo.lid, shops: listInfo.shops, stores:[], items:[], users: listInfo.users, timestamp:0};
+                lal[listInfo.lid]=nl;
+            }
+            this.updList(lal[lal.activeList]);
             localStorage.setItem('s2g_clists', JSON.stringify(lal));
         },
         reset: function(){
@@ -1131,10 +1149,11 @@ stuffAppServices.factory('Users', ['Lists', '$http', '$q', function(Lists, $http
             console.log(JSON.stringify(al));
             localStorage.setItem('s2g_users', JSON.stringify(al));
         },
-        makeDefLid: function(lid){
-            al[al.activeUser].defaultLid = lid;
+        makeDefListInfo: function(listInfo){
+            al[al.activeUser].defaultLid = listInfo.lid;
+            listInfo.users = [al.activeUser];
             localStorage.setItem('s2g_users', JSON.stringify(al));
-            Lists.makeDefLid(lid);
+            Lists.makeDefListInfo(listInfo);
         },
         makeActive: function(name){
             al.activeUser=name;
@@ -1215,6 +1234,7 @@ stuffAppServices.factory('Users', ['Lists', '$http', '$q', function(Lists, $http
         dBdelList: function(lid){
             var instance=this;
             var s;
+            Lists.delete(lid);
             var url=httpLoc + 'lists/' + lid ;
             var deferred = $q.defer();
             $http.delete(url).

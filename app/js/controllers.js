@@ -12,7 +12,7 @@ stuffAppControllers.controller('TimeCtrl', function ($scope, UsersData) {
 });
 
 
-stuffAppControllers.controller('RegisterCtrl', ['$scope', '$http', 'AuthService', 'UserLS',  'TokenService', 'DbService', 'ListService', '$rootScope', 'Users', function ($scope, $http, AuthService, UserLS, TokenService, DbService, ListService, $rootScope, Users) {
+stuffAppControllers.controller('RegisterCtrl', ['$scope', '$http', 'AuthService', 'UserLS',  'TokenService', 'DbService', 'ListService', '$rootScope', 'Users', '$state', function ($scope, $http, AuthService, UserLS, TokenService, DbService, ListService, $rootScope, Users, $state) {
     if (TokenService.tokenExists()){
         var message = 'all set you are authorized and have token';
         $scope.state = Users.setRegState('Authenticated');
@@ -125,10 +125,11 @@ stuffAppControllers.controller('RegisterCtrl', ['$scope', '$http', 'AuthService'
                 Users.dBget().then(function(){
                     Users.makeActive(name);
                     Users.dBgetLists();
-                });                
-                $scope.message = Users.setRegMessage('authenticated, token received');
-                $scope.state = Users.setRegState('Authenticated');
-                $scope.apikey = '';                    
+                    $scope.message = Users.setRegMessage('authenticated, token received');
+                    $scope.state = Users.setRegState('Authenticated');
+                    $scope.apikey = '';                      
+                    $state.go('lists'); 
+                });                                 
             }
         }, function(data){//if error
             console.log(data)
@@ -164,7 +165,7 @@ stuffAppControllers.controller('ListsCtrl', ['$scope', '$state', 'TokenService',
             Users.makeActive(name);
         }
         $scope.makeDefListInfo =function(def){
-            Users.makeDefLid(def.lid);
+            Users.makeDefListInfo(def);
             console.log('clicked shops')
             $state.go('list');
         }        
@@ -285,7 +286,7 @@ stuffAppControllers.controller('ListCtrl', ['$scope', '$state', '$filter',  '$in
             Users.makeActive(name);
         }
         $scope.makeDefListInfo =function(def){
-            Users.makeDefLid(def.lid);
+            Users.makeDefListInfo(def);
         }
         $scope.editBuffer={} 
      
@@ -404,7 +405,7 @@ stuffAppControllers.controller('UserCtrl', ['$scope', 'DbService', 'TokenService
             Users.makeActive(name);
         }
         $scope.makeDefListInfo =function(def){
-            Users.makeDefLid(def.lid); 
+            Users.makeDefListInfo(def); 
         }        
     } else {
          var message = 'you seem to be lacking a token';
