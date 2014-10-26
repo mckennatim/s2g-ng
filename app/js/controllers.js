@@ -272,6 +272,8 @@ stuffAppControllers.controller('ListCtrl', ['$scope', '$state', '$filter',  '$in
         $scope.lists = Lists;
         $scope.users = Users;
         $scope.stores=Stores;
+        $scope.showLoc=true;
+        $scope.showTags=true;
         $scope.onFocus = function(){
             console.log('lists focused')
             DbService.ckIfOnline().then(function(status){
