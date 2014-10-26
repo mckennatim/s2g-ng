@@ -167,6 +167,7 @@ stuffAppControllers.controller('ListsCtrl', ['$scope', '$state', 'TokenService',
         $scope.makeDefListInfo =function(def){
             Users.makeDefListInfo(def);
             console.log('clicked shops')
+            document.body.scrollTop = document.documentElement.scrollTop = 0;
             $state.go('list');
         }        
         var onFocus = function(){
