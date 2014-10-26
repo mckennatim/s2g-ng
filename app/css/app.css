@@ -1,6 +1,13 @@
 /* app css stylesheet  #C5B8FF;
  */
-
+.center {
+  text-align:center; 
+}
+.pad{
+  padding-top: 10px;
+  padding-left: 25px;
+  padding-right: 25px;
+}
 .menu {
   list-style: none;
   border-bottom: 0.1em solid black;

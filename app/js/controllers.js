@@ -138,12 +138,22 @@ stuffAppControllers.controller('RegisterCtrl', ['$scope', '$http', 'AuthService'
     };    
 }]);
 
-stuffAppControllers.controller('IsregCtrl', function (TokenService, $state, Users) {
+stuffAppControllers.controller('IsregCtrl', function (TokenService, $state, Users, $scope) {
      if (TokenService.tokenExists()){
-        $state.go('list');
+        $scope.users = Users;
+        $state.go('list');    
+        console.log('token exists')
     } else{
-        Users.setRegState('Get token');
-        $state.go('register');
+        $scope.loadData=function(){
+            console.log('loading demo data')
+            Users.demo();
+            $state.go('list');
+        }
+        $scope.register=function(){
+            Users.setRegState('Get token');
+            $state.go('register');
+        }
+
     }    
 });
 

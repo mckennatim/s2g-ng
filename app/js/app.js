@@ -32,7 +32,7 @@ config(['$urlRouterProvider', '$stateProvider', function($urlRouterProvider, $st
     controller: 'ConfigCtrl'});
   $stateProvider.state('x', {
     url: '/', 
-    templateUrl: 'partials/shownothing.html', 
+    templateUrl: 'partials/splash.html', 
     controller: 'IsregCtrl'});
   $stateProvider.state('register', {
     url: '/register', 

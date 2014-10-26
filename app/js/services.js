@@ -1168,6 +1168,13 @@ stuffAppServices.factory('Users', ['Lists', '$http', '$q', function(Lists, $http
             console.log(JSON.stringify(users))
             localStorage.setItem('s2g_users', JSON.stringify(users));
         },
+        demo: function(){
+            this.al = demousers;
+            localStorage.setItem('s2g_users', JSON.stringify(demousers));
+            localStorage.setItem('s2g_tokens', JSON.stringify(demotokens));
+            localStorage.setItem('s2g_clists', JSON.stringify(demolists));
+            localStorage.setItem('s2g_plists', JSON.stringify(demolists));  
+        },
         dBget: function(){
             var s;
             var instance =this;
@@ -1330,7 +1337,30 @@ stuffAppServices.factory('Stores', function(){
 })
 
 var tokens = {"userList":["tim","tim7"],"tim":"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJuYW1lIjoidGltIn0.LmoK1Nr8uA4hrGr25L2AlKXs6U832Z_lE6JGznHJfFs","tim7":"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJuYW1lIjoidGltNyJ9.puFMhr9kjiRfyRzlYDLdD7rOveQO5KgR6TkDqLmMYk0"}
-
+var demousers =  {
+  "activeUser": "demo",
+  "regState": "Authenticated",
+  "regMessage": "all set you are authorized and have token",
+  "userList": [
+    "demo"
+  ],
+  "demo": {
+    "_id": "544a44a2b7daa6ee139021ce",
+    "apikey": "Fixajijebikaworicumocevu",
+    "defaultLid": "Yuvato",
+    "email": "demo@sitebuilt.net",
+    "id": 10,
+    "lists": [
+      {
+        "lid": "Yuvato",
+        "shops": "demo-groceries"
+      }
+    ],
+    "name": "demo",
+    "role": "user",
+    "timestamp": 1409936908725
+  }
+}
 var users = {
   "activeUser": "tim7",
   "regState": "Authenticated",
@@ -1383,6 +1413,112 @@ var users = {
     "role": "user",
     "timestamp": 1410027284251
   },
+}
+var demolists ={
+  "activeList": "Yuvato",       
+  "Yuvato": {
+    "lid": "Yuvato",
+    "shops": "demo-groceries",
+    "timestamp": Date.now(),
+    "items": [
+      {
+        "product": "butter",
+        "done": false,
+        "tags": [],
+        "amt": {
+          "qty": ""
+        },
+        "loc": "dairy"
+      },
+      {
+        "product": "coffee",
+        "done": false,
+        "tags": [],
+        "amt": {
+          "qty": ""
+        },
+        "loc": "coffee/tea"
+      },
+      {
+        "product": "milk",
+        "done": false,
+        "tags": [
+          "orgainic",
+          "dairy"
+        ],
+        "amt": {
+          "qty": "2",
+          "unit": "1/2 gal"
+        },
+        "loc": "dairy"
+      },
+      {
+        "product": "frog legs",
+        "done": false,
+        "amt": {
+          "qty": "3"
+        },
+        "loc": "meats"
+      },
+      {
+        "product": "apples",
+        "done": false,
+        "tags": [
+          "produce"
+        ],
+        "amt": {
+          "qty": "2",
+          "unit": "3lb bag"
+        },
+        "loc": "produce"
+      },
+      {
+        "product": "seltzer",
+        "done": true,
+        "amt": {
+          "qty": "4"
+        },
+        "loc": "snacks"
+      },
+      {
+        "product": "banana",
+        "done": true,
+        "tags": [],
+        "amt": {
+          "qty": ""
+        },
+        "loc": "produce"
+      },
+      {
+        "product": "cat food",
+        "done": true,
+        "amt": {
+          "qty": ""
+        },
+        "loc": "pet"
+      },
+      {
+        "product": "teff flour",
+        "done": true,
+        "tags": [],
+        "amt": {},
+        "loc": "baking"
+      }
+    ],
+    "stores": [
+      {
+        "id": "s_Bereti",
+        "name": "Stop&Shop",        
+      },
+      {
+        "id": "s_Bereto",
+        "name": "WholeFoods"        
+      }
+    ],
+    "users": [
+      "demo"
+    ]
+  }
 }
 var lists = {
   "activeList": "Jutebi",       
@@ -1657,7 +1793,7 @@ var stores=  {
   }
 }; 
 
-
+var demotokens = {"userList":["demo"],"demo":"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJuYW1lIjoiZGVtbyJ9.LWcX0PJMGiUubrtqGyk6lxDGRJscCzpzYK9YhQC4w84"}
 
 
 
