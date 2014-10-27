@@ -1023,9 +1023,17 @@ stuffAppServices.factory('Lists', ['$http', '$q', '$rootScope', function($http, 
             }
         },
         add: function(listInfo){
+            console.log('in Lists.add');
             lal.activeList = listInfo.lid;
-            var nl = {lid: listInfo.lid, shops: listInfo.shops, stores:[], items:[], users: listInfo.users, timestamp:0};
-            lal[listInfo.lid]=nl;
+            if (lal[listInfo.lid]){
+                lal[listInfo.lid].users.push(listInfo.user);
+                lal[listInfo.lid].users = _.uniq(lal[listInfo.lid].users);                
+                console.log('list exists, adding user to it')
+            }else{
+                console.log('list isnt on this device')
+                var nl = {lid: listInfo.lid, shops: listInfo.shops, stores:[], items:[], users: listInfo.users, timestamp:0};
+                lal[listInfo.lid]=nl;                
+            }
             localStorage.setItem('s2g_clists', JSON.stringify(lal));
         },
         makeDefLid: function(lid){
@@ -1285,6 +1293,7 @@ stuffAppServices.factory('Users', ['Lists', '$http', '$q', function(Lists, $http
                 return s;
         },        
         addList: function(listInfo){
+            console.log('in Users.addList')
             al[al.activeUser].lists.push(listInfo)
             listInfo.users = [al.activeUser]
             Lists.add(listInfo);
