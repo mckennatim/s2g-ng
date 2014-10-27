@@ -1169,7 +1169,8 @@ stuffAppServices.factory('Users', ['Lists', '$http', '$q', function(Lists, $http
             localStorage.setItem('s2g_users', JSON.stringify(users));
         },
         demo: function(){
-            this.al = demousers;
+            var newLal  = demousers;
+            angular.copy(newLal, al);
             localStorage.setItem('s2g_users', JSON.stringify(demousers));
             localStorage.setItem('s2g_tokens', JSON.stringify(demotokens));
             localStorage.setItem('s2g_clists', JSON.stringify(demolists));
@@ -1419,7 +1420,7 @@ var demolists ={
   "Yuvato": {
     "lid": "Yuvato",
     "shops": "demo-groceries",
-    "timestamp": Date.now(),
+    "timestamp": "",
     "items": [
       {
         "product": "butter",
