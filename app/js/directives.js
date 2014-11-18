@@ -6,11 +6,7 @@
 var stuffAppDirectives = angular.module('stuffAppDirectives', []);
 
 
- stuffAppDirectives.directive('appVersion', ['version', function(version) {
-    return function(scope, elm, attrs) {
-      elm.text(version);
-    };
-  }]);
+
 
  stuffAppDirectives.directive('itemEscape', function () {
 		'use strict';

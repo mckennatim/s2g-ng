@@ -10,10 +10,18 @@
 </p>
 <div>
 	<ul class="list-group">
-		<li ng-repeat="user in users.al.userList track by $index" class="list-group-item lists" ng-class="{editing: list==editedList}"  ng-click="makeActive(user)"> 
-			<span>
+		<li ng-repeat="user in users.al.userList track by $index" class="list-group-item lists" ng-class="{editing: user==editedUser}" > 
+			<span class="view">
+				<i ng-click="edit(user)" class="delx glyphicon glyphicon-pencil ispace" ng-show="online"></i> 
+				<i ng-click="remove(user)" class="delx glyphicon glyphicon-remove ispace" ng-show="online"></i>
 				<span ng-click="makeActive(user)" class="list-name">{{user}}</span><br>
-			</span>			 	 
+			</span>	
+			<span class="edit">
+				<form ng-submit="doneEditing(user)" accept-charset="utf-8">
+
+					<input type="email" ng-trim="false" ng-model="user" item-escape="revertEdit(list)" size="18"  ></span>
+				</form>	
+			</span>  
 		</li>
 	</ul>
 </div>

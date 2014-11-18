@@ -102,7 +102,7 @@ stuffAppControllers.controller('RegisterCtrl', ['$scope', '$http', 'AuthService'
             }else {
                 $scope.email = '';
                 $scope.apikey ='';
-                $scope.message=UserLS.setRegMessage(data.message + ' on server but not here');
+                $scope.message=UserLS.setRegMessage(data.message + ' on server, good choice');
             }
         },function(data){
             console.log(data)
@@ -145,9 +145,10 @@ stuffAppControllers.controller('IsregCtrl', function (TokenService, $state, User
         $state.go('list');    
         console.log('token exists')
     } else{
+        Users.demo();
         $scope.loadData=function(){
             console.log('loading demo data')
-            Users.demo();
+            
             $state.go('lists');
         }
         $scope.register=function(){

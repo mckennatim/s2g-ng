@@ -1,5 +1,7 @@
 'use strict';
 var httpLoc = 'http://parleyvale.com:3000/api/';
+//var httpLoc = 'localhost:3000/api/';
+//var httpLoc = 'http://sitebuilt.net:3000/api/';
 
 /* Services */
 /*
@@ -1085,7 +1087,7 @@ stuffAppServices.factory('Lists', ['$http', '$q', '$rootScope', function($http, 
             if(!$rootScope.online){
                 deferred.resolve(list)
             }else{  
-                var c, p, s, cts, sts, pts, nts, updItems;
+                var c, p, s, cts, sts, pts, nts, updItems, stores;
                 c = list;
                 cts = c.timestamp;
                 //console.log(JSON.stringify(c))
@@ -1098,6 +1100,8 @@ stuffAppServices.factory('Lists', ['$http', '$q', '$rootScope', function($http, 
                         console.log('GET list from server: '+status)
                         var putIt=false;
                         s=data;
+                        delete s.users;
+                        stores = s.stores;
                         sts = s.timestamp
                         console.log(c.lid)
                         console.log(pts +' ' + new Date(pts))
@@ -1109,6 +1113,7 @@ stuffAppServices.factory('Lists', ['$http', '$q', '$rootScope', function($http, 
                             nts=Date.now();
                             c.items=updItems;
                             c.timestamp =nts;
+                            c.stores=stores;
                             setClist(c);
                             putIt=true
                         } else if(cts==pts && cts==sts){
@@ -1116,12 +1121,15 @@ stuffAppServices.factory('Lists', ['$http', '$q', '$rootScope', function($http, 
                         } else {
                             console.log('just sending c ')
                             updItems=c.items;
+                            c.stores=stores;
+                            setClist(c);
                             nts=cts;
                             putIt=true
                         }
                         if (putIt){
                             p.items = updItems;
                             p.timestamp = nts;
+                            p.stores = stores;
                             setPlist(p);
                             $http.put(url, {timestamp:nts, items: updItems}).
                                 success(function(data, status) {
