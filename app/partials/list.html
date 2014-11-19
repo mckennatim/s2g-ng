@@ -13,7 +13,7 @@
 		</span>	
 		<span class="btn-group btn-group-xs list-btn">
 	        <button type="button" class="btn btn-primary dropdown-toggle" ng-disabled="disabled" ng-click="sort()">
-	          SortBy<span class="caret"></span>
+	          {{sortBy}}<span class="caret"></span>
 	        </button>
 	        <ul class="dropdown-menu" role="menu">
 	          <li ng-repeat="store in lists.lal[lists.lal.activeList].stores  track by $index" ng-click="orderByStore(store)"><a >{{store.name}}</a></li>
@@ -28,7 +28,7 @@
 		<span class="glyphicon glyphicon-signal" ng-show="online"></span>
 		<span class="glyphicon glyphicon-ban-circle" ng-show="!online"></span>
 		<span>{{users.al.activeUser}}</span>
-		<span>{{lists.lal.activeList}}</span>		
+		<span>{{lists.lal[lists.lal.activeList].shops}}</span>		
 		<ul class="list group" >
 			<li ng-repeat="item in notdone = (lists.lal[lists.lal.activeList].items | filter:{done:false}) track by $index" class="list-group-item need"
 			ng-class="{editing: item==editedItem}" ng-click="onFocus()">

@@ -145,13 +145,15 @@ stuffAppControllers.controller('IsregCtrl', function (TokenService, $state, User
         $state.go('list');    
         console.log('token exists')
     } else{
-        Users.demo();
+        
         $scope.loadData=function(){
+            Users.demo();
             console.log('loading demo data')
             
             $state.go('lists');
         }
         $scope.register=function(){
+            console.log('in isReg.register')
             Users.setRegState('Get token');
             $state.go('register');
         }
@@ -284,6 +286,7 @@ stuffAppControllers.controller('ListCtrl', ['$scope', '$state', '$filter',  '$in
         $scope.lists = Lists;
         $scope.users = Users;
         $scope.stores=Stores;
+        $scope.sortBy = 'alpha'
         $scope.showLoc=true;
         $scope.showTags=true;
         $scope.onFocus = function(){
@@ -381,6 +384,7 @@ stuffAppControllers.controller('ListCtrl', ['$scope', '$state', '$filter',  '$in
             }  
         };              
         $scope.orderByStore= function(store){
+            $scope.sortBy=store.name;
             var aisleOrder = function(item){
                 if(!item.loc){
                     return 0 
@@ -397,6 +401,7 @@ stuffAppControllers.controller('ListCtrl', ['$scope', '$state', '$filter',  '$in
 
         $scope.reverse = false;
         $scope.sort = function(){
+            $scope.sortBy='alpha';
             var items= $scope.lists.lal[$scope.lists.lal.activeList].items;
             $scope.lists.lal[$scope.lists.lal.activeList].items = orderBy(items, "product", $scope.reverse);
             $scope.reverse = !$scope.reverse
@@ -437,9 +442,14 @@ stuffAppControllers.controller('TemplCtrl', ['$scope', 'DbService', 'TokenServic
         $scope.message=UserLS.setRegMessage(message);
     }    
 }]);
-stuffAppControllers.controller('ShopsCtrl', ['$scope', 'DbService', 'UserLS', '$rootScope',function ($scope, DbService, UserLS, $rootScope) {
+stuffAppControllers.controller('ShopsCtrl', ['$scope', 'Stores', 'Lists', '$rootScope',function ($scope, Stores, Lists, $rootScope) {
     $scope.dog = 'fritz';
     $rootScope.online=false;
+    $scope.stores=Stores;
+    $scope.lists=Lists;
+    $scope.reset =function(){
+        Stores.reset();
+    }
     //$scope.templ2 = 'partials/lists.html';
     //$scope.lists= UserLS.getLists();
 }]);

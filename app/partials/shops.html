@@ -2,7 +2,17 @@
 <!-- <div ng-include="templ2"></div> -->
 <!-- <div class="bkg-shops"> -->
 
-</br></br></br></br><p>Hey {{dog}}, this is the p  artial for stores.html </p>
+</br></br></br></br><p>Hey {{dog}}, this is the partial for shops.html </p>
+<span>{{lists.lal[lists.lal.activeList].lid}}: {{lists.lal[lists.lal.activeList].shops}}</span>	
+<button type="button" ng-click="addStores()">Add Stores</button><br><br>
+<ul class="list group" >
+	<li ng-repeat="store in stores = lists.lal[lists.lal.activeList].stores"
+	class="list-group-item">
+	<span>{{store.name}}</span>
+	</li>
+</ul>	
+<button type="button" ng-click="reset()">Reset Categories to default</button>
+
 <!-- <pre>
 {{list}}
 </pre>
