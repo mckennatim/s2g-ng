@@ -7,12 +7,12 @@ stuffAppControllers.controller('RootController', function($scope, $state) {
     $scope.$state = $state;
 });
 
-stuffAppControllers.controller('TimeCtrl', function ($scope, UsersData) {
+stuffAppControllers.controller('TimeCtrl', function ($scope) {
     $scope.timestamp=Date.now();
 });
 
 
-stuffAppControllers.controller('RegisterCtrl', ['$scope', '$http', 'AuthService', 'UserLS',  'TokenService', 'DbService', 'ListService', '$rootScope', 'Users', '$state', function ($scope, $http, AuthService, UserLS, TokenService, DbService, ListService, $rootScope, Users, $state) {
+stuffAppControllers.controller('RegisterCtrl', ['$scope', '$http', 'AuthService', 'UserLS',  'TokenService', '$rootScope', 'Users', '$state', function ($scope, $http, AuthService, UserLS, TokenService, $rootScope, Users, $state) {
     if (TokenService.tokenExists()){
         var message = 'all set you are authorized and have token';
         $scope.state = Users.setRegState('Authenticated');
@@ -161,7 +161,7 @@ stuffAppControllers.controller('IsregCtrl', function (TokenService, $state, User
     }    
 });
 
-stuffAppControllers.controller('ListsCtrl', ['$scope', '$state', 'TokenService', 'UserLS', 'ListService', 'DbService', '$rootScope', '$window', 'Users', 'Lists', function ($scope, $state, TokenService, UserLS, ListService, DbService, $rootScope, $window, Users, Lists) {//must be in same order
+stuffAppControllers.controller('ListsCtrl', ['$scope', '$state', 'TokenService', 'UserLS', '$rootScope', '$window', 'Users', 'Lists', function ($scope, $state, TokenService, UserLS, $rootScope, $window, Users, Lists) {//must be in same order
     if (TokenService.tokenExists()){
         /*------setup------*/
         console.log('in Lists ctrl');
@@ -169,7 +169,7 @@ stuffAppControllers.controller('ListsCtrl', ['$scope', '$state', 'TokenService',
         //$scope.listsInput='dog';
         $scope.templUser = 'partials/user.html';        
         var online = $rootScope.online = false ;   
-        //DbService.ckIfOnline();  
+        //Users.ckIfOnline();  
         $scope.lists = Lists;
         $scope.users = Users;
         $scope.active = Users.al.activeUser;
@@ -186,7 +186,7 @@ stuffAppControllers.controller('ListsCtrl', ['$scope', '$state', 'TokenService',
         }        
         var onFocus = function(){
             console.log('lists focused')
-            DbService.ckIfOnline().then(function(status){
+            Users.ckIfOnline().then(function(status){
                 if (status==200){
                     console.log('in onFocus about to dBget and saveList ')
                     Users.dBget().then(function(){});
@@ -274,7 +274,7 @@ stuffAppControllers.controller('ListsCtrl', ['$scope', '$state', 'TokenService',
     }
 }]);
 
-stuffAppControllers.controller('ListCtrl', ['$scope', '$state', '$filter',  '$interval', '$window', 'ListService', 'TokenService', 'UserLS', 'DbService', '$rootScope', 'Lists', 'Users', 'Stores', function ($scope, $state, $filter, $interval, $window, ListService, TokenService, UserLS, DbService, $rootScope, Lists, Users, Stores) {
+stuffAppControllers.controller('ListCtrl', ['$scope', '$state', '$filter',  '$interval', '$window',  'TokenService', 'UserLS', '$rootScope', 'Lists', 'Users', 'Stores', function ($scope, $state, $filter, $interval, $window, TokenService, UserLS, $rootScope, Lists, Users, Stores) {
     if (TokenService.tokenExists()){
         /*----------setup----------------*/
         console.log('in list ctrl')
@@ -282,7 +282,6 @@ stuffAppControllers.controller('ListCtrl', ['$scope', '$state', '$filter',  '$in
         var filter =$filter('filter');
         $scope.templLists = 'partials/lists.html'; 
         online= $scope.online=$rootScope.online=false;
-        //DbService.ckIfOnline();
         $scope.lists = Lists;
         $scope.users = Users;
         $scope.stores=Stores;
@@ -291,7 +290,7 @@ stuffAppControllers.controller('ListCtrl', ['$scope', '$state', '$filter',  '$in
         $scope.showTags=true;
         $scope.onFocus = function(){
             console.log('lists focused')
-            DbService.ckIfOnline().then(function(status){
+            Users.ckIfOnline().then(function(status){
                 if (status==200){
                     console.log('in onFocus about to dBget and saveList ')
                     Users.dBget().then(function(){});
@@ -414,25 +413,28 @@ stuffAppControllers.controller('ListCtrl', ['$scope', '$state', '$filter',  '$in
 }]);
 
 
-stuffAppControllers.controller('UserCtrl', ['$scope', 'DbService', 'TokenService', 'Users', 'Lists', function ($scope, DbService,TokenService, Users,Lists) {
+stuffAppControllers.controller('UserCtrl', ['$scope', 'TokenService', 'Users', 'Lists', '$state', function ($scope,TokenService, Users,Lists, $state) {
     if (TokenService.tokenExists()){
         console.log('in UserCtrl')
         $scope.lists = Lists;
         $scope.users= Users;
         $scope.active = Users.al.activeUser;
-        DbService.ckIfOnline();
+        Users.ckIfOnline();
         $scope.makeActive=function(name){
             Users.makeActive(name);
         }
         $scope.makeDefListInfo =function(def){
             Users.makeDefListInfo(def); 
-        }        
+        }   
+        $scope.goRegister =function(){
+            $state.go('register');
+        }     
     } else {
          var message = 'you seem to be lacking a token';
     }   
 }]);
 
-stuffAppControllers.controller('TemplCtrl', ['$scope', 'DbService', 'TokenService', 'UserLS', function ($scope, DbService, TokenService, UserLS) {
+stuffAppControllers.controller('TemplCtrl', ['$scope', 'TokenService', 'UserLS', function ($scope, TokenService, UserLS) {
     if (TokenService.tokenExists()){
         var message = 'all set you are authorized and have token';
         $scope.state = UserLS.setRegState('Authenticated');
@@ -457,7 +459,7 @@ stuffAppControllers.controller('ConfigCtrl', ['$scope', function ($scope) {
     $scope.dog = 'kazzy';
 
 }]);
-stuffAppControllers.controller('AdminCtrl', ['$scope', 'UserLS',  'TokenService', 'ListService', 'Lists', 'Users', 'Stores', function ($scope, UserLS, TokenService, ListService, Lists, Users, Stores) {
+stuffAppControllers.controller('AdminCtrl', ['$scope', 'UserLS',  'TokenService', 'Lists', 'Users', 'Stores', function ($scope, UserLS, TokenService, Lists, Users, Stores) {
     $scope.users=Users;
     $scope.lists=Lists;
     $scope.username='';

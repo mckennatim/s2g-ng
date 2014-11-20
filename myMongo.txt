@@ -3,3 +3,5 @@
 db.lists.update({lid:"Yuvato"}, {$set:{"stores.0": {"id" : "s_Bereti","name" : "Stop&Shop"}, "stores.1": {"id" : "s_Bereto","name" : "WholeFoods"}}})
 
 db.lists.find({lid:"Yuvato"}).pretty()
+
+db.users.remove user

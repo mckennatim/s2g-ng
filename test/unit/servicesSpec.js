@@ -1,17 +1,7 @@
 'use strict';
 /* jasmine specs for services go here */
 var s2g_users={"lastLive":0,"regState":"Authenticated","userList":["tim"],"tim":{"name":"tim","email":"mckenna.tim@gmail.com","lists":[],"role":"","timestamp":1,"apikey":"Natacitipavuwunexelisaci"}};
-describe('service', function() {
-    beforeEach(module('stuffAppServices'));
-    describe('ItemsData', function() {
-        it('should get first product on list', inject(function(ItemsData) {
-            var tlist = ItemsData.get();
-            console.log(tlist);
-            var item1= tlist[0].product;
-            expect(item1).toEqual('banana');
-        }));
-    });
-});
+
 describe('UserLS', function(){  
     var store= {};
     beforeEach(function() {
@@ -179,16 +169,5 @@ describe('TokenService', function(){
         expect(response.then).toBeDefined();
     }));       
 }) ;  
-describe('ListService', function(){
-    beforeEach(function(){
 
-    })
-    beforeEach(module(function(){
-
-    }))
-    beforeEach(inject(function(){
-
-    }))
-    console.log()
-})
 

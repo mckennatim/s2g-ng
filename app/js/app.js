@@ -54,7 +54,7 @@ StuffApp.config(function ($httpProvider) {
     $httpProvider.interceptors.push('TokenInterceptor');
     $httpProvider.interceptors.push('OnlineInterceptor');
 });
-StuffApp.run(function(DbService, $window, $rootScope){
+StuffApp.run(function($window, $rootScope){
   $rootScope.online=false;
   $rootScope.status=0;
 })

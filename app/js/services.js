@@ -1,7 +1,7 @@
 'use strict';
-var httpLoc = 'http://parleyvale.com:3000/api/';
+//var httpLoc = 'http://parleyvale.com:3000/api/';
 //var httpLoc = 'localhost:3000/api/';
-//var httpLoc = 'http://sitebuilt.net:3000/api/';
+var httpLoc = 'http://sitebuilt.net:3000/api/';
 
 /* Services */
 /*
@@ -11,460 +11,7 @@ underscore.factory('_', function() {
 }); 
 */
 var stuffAppServices = angular.module('stuffAppServices', []);
-stuffAppServices.factory('ItemsData', function($http) {
-    var lsid = 'groceries';
-    var inidata = [
-        {lid:'26',product:'banana', done:false},
-        {lid:'26',product:'coffee', done:false},
-        {lid:'26',product:'brown sugar', done:false},
-        {lid:'26',product:'bacon', done:false},
-        {lid:'26',product:'apples', done:false},
-        {lid:'26',product:'brown gravy', done:true},
-        {lid:'26',product:'bags', done:true},
-        {lid:'26',product:'applesauce', done:true},
-        {lid:'26',product:'sugar', done:true},
-        {lid:'26',product:'baby back ribs', done:true},
-        {lid:'26',product:'apple butter', done:true}
-    ];
-        return {
-        get: function () {
-            /*
-            var url=httpLoc + 'products/4';
-            var promise=$http.get(url).then(function(data) {
-                console.log(data.data);
-                return data;
-            });
-            return promise;
-            */   
-            var ret = JSON.parse(localStorage.getItem(lsid)) || inidata;
-            return ret;
-            
-        },
-        put: function(list){
-            console.log('in put'+lsid);
-            console.log(JSON.stringify(list));
-            localStorage.setItem(lsid, JSON.stringify(list));
-        },
-        kitty: 'mabibi'
-    };
-});
 
-
-stuffAppServices.factory( 'ListService', ['$q', '$http', '$log', 'DbService', 'UserLS', '$rootScope', function($q, $http, $log, DbService, UserLS, $rootScope){
-    var key = 's2g_lists';
-    var blankLists = {};
-    return{ 
-        getClist: function(listInfo){
-            var key = 's2g_clists';
-            var al=JSON.parse(localStorage.getItem(key)) || {};
-            var user = UserLS.activeUser();
-            var list={}
-            if(!al[listInfo.lid]){
-                list = {lid: listInfo.lid, shops: listInfo.shops, timestamp: 0, items: [], users: [user]}
-                al[list.lid]=list;
-                localStorage.setItem(key, JSON.stringify(al));
-            }else{
-                list=al[listInfo.lid]
-            }
-            return list
-        },   
-        setClist: function(list){
-            var key = 's2g_clists'
-            var al=JSON.parse(localStorage.getItem(key)) || {};
-            al[list.lid]=list;
-            localStorage.setItem(key, JSON.stringify(al));
-        },
-        getPlist: function(listInfo){
-            var key = 's2g_plists';
-            var al=JSON.parse(localStorage.getItem(key)) || {};
-            var user = UserLS.activeUser();
-            var list= al[listInfo.lid]
-            if(!list){
-                list = {lid: listInfo.lid, shops: listInfo.shops, timestamp: 0, items: [], users: [user]}
-                al[list.lid]=list;
-                localStorage.setItem(key, JSON.stringify(al));
-            }
-            return list;
-        },   
-        setPlist: function(list){
-            var key = 's2g_plists'
-            var al=JSON.parse(localStorage.getItem(key)) || {};
-            al[list.lid]=list;
-            localStorage.setItem(key, JSON.stringify(al));
-        }, 
-        updList: function(list){
-            var deferred =$q.defer();
-            this.setClist(list)
-            var instance =this;
-            var listInfo = {lid: list.lid, shops: list.shops}
-            console.log('in updList, $rootScope.online: ' +$rootScope.online)
-            if(!$rootScope.online){
-                deferred.resolve(list)
-            }else{  
-                var c, p, s, cts, sts, pts,updItems;
-                c = list;
-                cts = c.timestamp;
-                //console.log(JSON.stringify(c))
-                p = this.getPlist(listInfo);
-                pts = p.timestamp;
-                var url=httpLoc + 'lists/'+listInfo.lid; 
-                $http.get(url).   
-                    success(function(data, status) {
-                        console.log('GET list from server: '+status)
-                        s=data;
-                        sts = s.timestamp
-                        if (sts > pts){ //if server has been updated since prior LS
-                            console.log('merging')
-                            updItems=instance.merge(p.items, c.items, s.items);
-                        } else {
-                            console.log('just sending c ')
-                            updItems=c.items;
-                        }     
-                        p.items = updItems;
-                        p.timestamp = cts;
-                        instance.setPlist(p);
-                        $http.put(url, {timestamp:cts, items: updItems}).
-                            success(function(data, status) {
-                                console.log('PUT updated list on server: ' +status)
-                            }).                
-                            error(function(data, status){
-                                console.log(status)
-                            });
-                         deferred.resolve(p);                                                                      
-                    }).
-                    error(function(data, status){
-                        deferred.reject(data)
-                    });
-            }
-            return deferred.promise
-        },       
-        getDefault: function(){
-            var name = UserLS.activeUser();
-            var dl= UserLS.getDefaultList();
-            return dl;
-            if(dl){return dl.lid;}           
-        },
-        getList: function(listInfo){
-            //quickly send list in localStorage then update LS and send that
-            console.log('in getList')
-            var lid = listInfo.lid;
-            var shops = listInfo.shops;
-            var list = this.getLS(lid);
-            // if(! list){
-            //     list = this.getDB(lid);
-            // }
-            if (! list){
-                list = {lid: lid, shops: shops, timestamp: 0, list: [] }
-            };
-            return list
-        },
-        getLS:  function(listInfo){
-            console.log('in ListService.getLS')
-            var ax, lid, shops, list;
-            ax = this.getAll();
-            lid = listInfo.lid;
-            shops = listInfo.shops;
-            list = ax[lid];
-            if (! list){
-                list = {lid: lid, shops: shops, timestamp: 0, items: [], users: []}
-                this.putLS(list);
-            };            
-            return list;
-        },
-        putLS: function(list){
-            console.log('in putLS')
-            var ax = this.getAll();
-            ax[list.lid]=list;
-            //console.log(JSON.stringify(ax))
-            localStorage.setItem(key, JSON.stringify(ax));
-            return ax;         
-        },
-        getAll: function(){
-            var ret = {};
-            if(!localStorage.getItem(key) || localStorage.getItem(key).length <10 ){
-                console.log('UH OH  RECREATING  '+key)
-                ret = blankLists;
-                localStorage.setItem(key, JSON.stringify(ret));
-            } else {
-                ret=JSON.parse(localStorage.getItem(key));
-            }
-            return ret;            
-        },
-        getDB: function(lid){
-
-        },
-        // ckIfOnline: function(){
-        //     console.log('in ListsService.ckifOnline')
-        //     var s;
-        //     var deferred = $q.defer();
-        //     $http.get(httpLoc).   
-        //         success(function(data, status) {
-        //             if(status==200){
-        //                 $rootScope.online=true;
-        //                 UserLS.setServerOnline(true);
-        //                 s=data
-        //                 deferred.resolve(data)
-        //             }else{
-        //                 $rootScope.online=false;
-        //                 UserLS.setServerOnline(false);
-        //                 s= data
-        //                 deferred.reject(data)                        
-        //             }
-        //             console.log('setServerOnline to tf') 
-        //             s=deferred.promise;
-        //             return s;                      
-        //         }).
-        //         error(function(data, status){
-        //             $rootScope.online=false;
-        //             UserLS.setServerOnline(false);
-        //             console.log('checking if online, error')
-        //             console.log(UserLS.serverIsOnline())
-        //             s=data
-        //             deferred.reject(data)
-        //         }); 
-        //         s=deferred.promise;
-        //         return s;                          
-        // },
-        update: function(list){            
-            console.log('in update')
-            var c, p, s, updItems, cts, pts, sts, deferred, lid;
-            console.log('serverIsOnline: '+$rootScope.online);
-            var instance =this;
-            lid = list.lid
-            c = list;
-            cts=Date.now();
-            if (!c.items){
-                c.timestamp=0;
-            }else{
-                c.timestamp = cts;
-            }            
-            //console.log(JSON.stringify(c.items))
-            cts = Date.now();
-            p = this.getLS(list);
-            //console.log(c)
-            pts = p.timestamp;
-            deferred = $q.defer();
-            if($rootScope.online){
-                var url=httpLoc + 'lists/'+lid; 
-                $http.get(url).   
-                    success(function(data, status) {
-                        if(!$rootScope.online){
-                            console.log('no connection, shouldnt be here');
-                            instance.putLS(c);
-                            deferred.resolve(c);
-                            return
-                        }
-                        console.log('connection exists')
-                        s = data;
-                        sts = s.timestamp
-                        console.log(sts)
-                        console.log(pts)
-                        console.log(sts-pts)
-                        if (sts > pts){ //if server has been updated since prior LS
-                            console.log('merging')
-                            updItems=instance.merge(p.items, c.items, s.items);
-                        } else {
-                            console.log('just sending c ')
-                            updItems=c.items;
-                        }
-                        //console.log(JSON.stringify(updItems));
-                        s.items = updItems;
-                        s.timestamp = cts;
-                        instance.putLS(s);
-                        $http.put(url, {timestamp:cts, items: updItems}).
-                            success(function(data, status) {
-                                console.log(status)
-                            }).                
-                            error(function(data, status){
-                                console.log(status)
-                            });
-
-                        deferred.resolve(s);
-                    }).
-                    error(function(data, status){
-                        deferred.reject(data)
-                    });
-                s = deferred.promise;   
-                return s;                  
-            } else{
-                console.log('no connection, just update LS');
-                if (list.items.length==0){
-                    list.timestamp=0
-                }else{
-                    list.timestamp = cts;
-                }
-                instance.putLS(list);
-                list = deferred.promise; 
-                return list
-            }
-        },
-        addList: function(shops){
-            var s;
-            var url=httpLoc + 'lists/' + shops ;
-            var deferred = $q.defer();
-            $http.post(url).
-                success(function(data,status){
-                    s=data
-                    console.log(data)
-                    deferred.resolve(data)
-                }).
-                error(function(data,status){
-                    s= data
-                    deferred.reject(data)
-                });
-                s=deferred.promise;
-                return s;
-        },
-        delList: function(lid){
-            var s;
-            var url=httpLoc + 'lists/' + lid ;
-            var deferred = $q.defer();
-            $http.delete(url).
-                success(function(data,status){
-                    s=data
-                    deferred.resolve(data)
-                }).
-                error(function(data,status){
-                    s= data
-                    deferred.reject(data)
-                });
-                s=deferred.promise;
-                return s;
-        },
-        joinList: function(lid){
-            var s;
-            var instance =this;
-            var url=httpLoc + 'user/'+lid;      
-            var deferred = $q.defer();     
-            $http.put(url).
-                success(function(data,status){
-                    console.log(data)
-                    instance.putLS(data)
-                    s=data
-                    deferred.resolve(data)
-                }).
-                error(function(data,status){
-                    s= data
-                    deferred.reject(data)
-                });
-                s=deferred.promise;
-                return s;
-        },
-        poll: function(list){            
-            console.log('in poll')
-            var p, s, updItems, pts, sts, deferred, lid;
-            var serverIsOnline = UserLS.serverIsOnline();
-            console.log(serverIsOnline);
-            var instance =this;
-            p = this.getLS(list);
-            pts = p.timestamp;
-            lid=list.lid
-            //deferred = $q.defer();
-            if(serverIsOnline){
-                var url=httpLoc + 'lists/'+lid; 
-                $http.get(url).   
-                    success(function(data, status) {
-                        console.log(UserLS.serverIsOnline());
-                        if(!UserLS.serverIsOnline()){
-                            console.log('no connection, should have known');
-                            return
-                        }
-                        //console.log('connection exists')
-                        UserLS.setServerOnline(true);
-                        s = data;
-                        sts = s.timestamp;
-                        console.log(s.lists);
-                        console.log(pts);
-                        if (sts > pts){ //if server has been updated since prior LS
-                            console.log('server has been updated')
-                            updItems=instance.mergeps(s.items, p.items);
-                            p.items = updItems;
-                            p.timestamp = pts;
-                            instance.putLS(p)
-                        } 
-                        //deferred.resolve(p);
-                    }).
-                    error(function(data, status){
-                        //deferred.reject(data)
-                    });
-                //p = deferred.promise;   
-                //return p;                  
-            } else{
-                console.log('no connection, should have noticed');
-            }
-        },        
-         difference: function(array){
-            var prop =arguments[2];
-            var rest = Array.prototype.concat.apply(Array.prototype, Array.prototype.slice.call(arguments, 1));
-            var containsEquals = function(obj, target) {
-                if (obj == null) return false;
-                return _.any(obj, function(value) {
-                    return value[prop] === target[prop];
-                });
-            };
-            return _.filter(array, function(value){
-                return ! containsEquals(rest, value); 
-            });
-        }, 
-        union: function (arr1, arr2, prop) {
-            var sa1= JSON.stringify(arr1);
-            var arr3 = JSON.parse(sa1);
-            _.each(arr2, function(arr2obj) {
-                var arr1obj = _.find(arr1, function(arr1obj) {
-                    return arr1obj[prop] === arr2obj[prop];
-                });
-                arr1obj ? _.extend(arr3, arr2obj) : arr3.push(arr2obj);
-            });
-            return arr3
-        },    
-        merge: function(pz2,cz2,sz2){
-            // (C\(P\S))U(S\(P\C))
-            var condT = {'done': true};
-            var condF = {'done': false};
-            var p = _.filter(pz2, condF);
-            var c = _.filter(cz2, condF);
-            var s = _.filter(sz2, condF);
-            var sT = _.filter(sz2, condT);
-            var ps = this.difference(p,s, 'product');
-            var pc = this.difference(p,c, 'product' );
-            var cps = this.difference(c,ps, 'product');
-            var spc = this.difference(s,pc, 'product');
-            var arr3 = this.union(spc, cps, 'product');
-            //(MERGED{'done':false}) U (Server,{'done': true})
-            var arr4 = this.union(arr3, sT, 'product');
-            return arr4
-        },
-        mergeps: function(pz2,sz2){
-            var condT = {'done': true};
-            var condF = {'done': false};
-            var p = _.filter(pz2, condF);
-            var s = _.filter(sz2, condF);
-            var sT = _.filter(sz2, condT);
-            var ps = this.union(p, s, 'product');
-            var arr4 = this.union(ps, sT, 'product');
-            console.log(JSON.stringify(arr4));
-            return arr4
-        }                  
-    }
-}]);
-
-stuffAppServices.factory('UsersData', function($http) {
-    return {
-        post: function () {
-            var usr = {name:'tim9', email:"tim@sitebuilt.net", lists:[]};
-            var url=httpLoc + 'users';
-            var promise=$http.post(url, usr).then(function(data) {
-                console.log(data.data);
-                return data;
-            });
-            return promise;
-            /*     
-            var ret = JSON.parse(localStorage.getItem(lsid)) || inidata;
-            return ret;
-            */
-        }
-    }
-});
 stuffAppServices.factory('UserLS', function() {
     var key = 's2g_users';
     var state = 's2g_state';
@@ -650,7 +197,7 @@ stuffAppServices.factory('UserLS', function() {
         }
     }
 });
-stuffAppServices.factory('AuthService', ['$http', '$q', 'DbService',  function($http, $q, DbService) {
+stuffAppServices.factory('AuthService', ['$http', '$q',  function($http, $q) {
     return {
         auth: function(apikey, name) {
             var url=httpLoc + 'authenticate/' + name;
@@ -713,78 +260,7 @@ stuffAppServices.factory('AuthService', ['$http', '$q', 'DbService',  function($
         }    
     }
 }]);
-stuffAppServices.factory('DbService', ['$http', '$q', 'UserLS','TokenInterceptor' , function($http, $q, UserLS, TokenInterceptor) {
-    return {
-        ckIfOnline: function(){
-            var deferred =$q.defer()
-            $http.get(httpLoc).
-                success(function(data,status){
-                    deferred.resolve(status);
-                }).
-                error(function(data,status){
-                    deferred.reject(status);
-                }); 
-            return deferred.promise;                         
-        },          
-        updateUser: function(){ 
-            var uname = UserLS.activeUser()
-            var url=httpLoc + 'users/'+uname;      
-            var deferred = $q.defer();
-            $http.get(url, {withCredentials:true}).   
-                success(function(data, status) {
-                    if(data != undefined && status==200){
-                        //console.log(data)
-                        UserLS.postUser(data, 'Authenticated');                      
-                    };
-                    //console.log(status);
-                    deferred.resolve(data);
-                }).
-                error(function(data, status){
-                    console.log(data || "Request failed");
-                    console.log(status);
-                    deferred.reject({message: 'server is down'})
-                });
-            return deferred.promise;
-        },
-        putUser: function(stuff){
-            var uname = UserLS.activeUser()
-            var url=httpLoc + 'users/'+uname;    
-            var deferred = $q.defer();
-            $http.put(url, stuff ).   
-                success(function(data, status) {
-                    if(data != undefined){
-                        console.log(data)
-                        UserLS.postUser(data, 'Authenticated');                      
-                    };
-                    console.log(status);
-                    deferred.resolve(data);
-                }).
-                error(function(data, status){
-                    console.log(data || "Request failed");
-                    console.log(status);
-                    deferred.reject({message: 'server is down'})
-                });
-            return deferred.promise;
-        },
-        getList: function(list) {
-            var url=httpLoc + 'lists/'+list;      
-            var deferred = $q.defer();
-            //var config = {};
-            //config = TokenInterceptor.request(config);
-            //console.log(config);
-            $http.get(url).   
-            //$http.get(url, config).   
-            //$http.get(url, {headers: {Authorization: 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJuYW1lIjoidGltIn0.LmoK1Nr8uA4hrGr25L2AlKXs6U832Z_lE6JGznHJfFs'}}).   
-                success(function(data, status) {
-                    deferred.resolve(data);
-                }).
-                error(function(data, status){
-                    deferred.reject(data)
-                });
-            return deferred.promise;
-        }
-    }
-}]);
+
 stuffAppServices.factory('TokenInterceptor', ['$q', '$injector', function ($q, $injector) {
     var UserLS=$injector.get('UserLS');
     var TokenService = $injector.get('TokenService');
@@ -794,26 +270,6 @@ stuffAppServices.factory('TokenInterceptor', ['$q', '$injector', function ($q, $
     return { 
         request: function (config) {
             var blankTokens= {userList:[]};
-            // var getActiveToken = function(){
-            //     var name = UserLS.activeUser();
-            //     //console.log(name)
-            //     var getAll= function(){
-            //         //console.log(localStorage)    
-            //         var ret = {};
-            //         if(!localStorage.getItem('s2g_tokens')){
-            //             ret = blankTokens;
-            //             //console.log(JSON.stringify(ret))
-            //             localStorage.setItem('s2g_tokens', JSON.stringify(ret));
-            //         } else {
-            //             //console.log(localStorage.getItem(this.key));
-            //             //console.log(JSON.parse(localStorage.getItem(key)).userList);
-            //             ret=JSON.parse(localStorage.getItem("s2g_tokens"));
-            //         }
-            //         return ret;
-            //     }
-            //     var ax = getAll();
-            //     return ax[name];
-            // }
             var tok = TokenService.getActiveToken();
             //var tok = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJuYW1lIjoidGltIn0.LmoK1Nr8uA4hrGr25L2AlKXs6U832Z_lE6JGznHJfFd'; //broken token should cause error
             //console.log(tok);
@@ -828,9 +284,6 @@ stuffAppServices.factory('TokenInterceptor', ['$q', '$injector', function ($q, $
         },
         /* Set Authentication.isAuthenticated to true if 200 received */
         response: function (response) {
-            // if (response != null && response.status == 200 && this.getActiveToken() && !AuthenticationService.isAuthenticated) {
-            //     AuthenticationService.isAuthenticated = true;
-            // }
             return response || $q.when(response);
         },
         /* Revoke client authentication if 401 is received */
@@ -846,9 +299,7 @@ stuffAppServices.factory('TokenInterceptor', ['$q', '$injector', function ($q, $
                     UserLS.setServerOnline(false);
                     return true
                 }
-            }
-            //console.log('token is undefineserver is offline')
-            //UserLS.setServerOnline(false);            
+            }         
             return $q.reject(rejection);               
         }
     };
@@ -1155,6 +606,17 @@ stuffAppServices.factory('Users', ['Lists', '$http', '$q', function(Lists, $http
     var al = JSON.parse(localStorage.getItem('s2g_users')) || {activeList:'', regState:'Register',regMessage:'', userList:[]}
     return{
         al:al,
+        ckIfOnline: function(){
+            var deferred =$q.defer()
+            $http.get(httpLoc).
+                success(function(data,status){
+                    deferred.resolve(status);
+                }).
+                error(function(data,status){
+                    deferred.reject(status);
+                }); 
+            return deferred.promise;                         
+        },  
         LSget: function(){
             this.al = JSON.parse(localStorage.getItem('s2g_users')) || {activeUser:'', regState:'Register',regMessage:'', userList:[]}
         },
