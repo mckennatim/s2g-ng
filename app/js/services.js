@@ -12,6 +12,7 @@ underscore.factory('_', function() {
 */
 var stuffAppServices = angular.module('stuffAppServices', []);
 
+/*DONT USE - PHASING OUT AFTER MOVING A FEW MORE FUNCTIONS TO USERS*/
 stuffAppServices.factory('UserLS', function() {
     var key = 's2g_users';
     var state = 's2g_state';
