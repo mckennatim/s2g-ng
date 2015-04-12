@@ -1,7 +1,7 @@
 'use strict';
-//var httpLoc = 'http://parleyvale.com:3000/api/';
+var httpLoc = 'http://parleyvale.com:3000/api/';
 //var httpLoc = 'localhost:3000/api/';
-var httpLoc = 'http://sitebuilt.net:3000/api/';
+//var httpLoc = 'http://sitebuilt.net:3000/api/';
 
 /* Services */
 /*
